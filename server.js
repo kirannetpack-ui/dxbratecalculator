@@ -54,7 +54,7 @@ let forexRates = {
   }
 };
 
-// HELPER: Exact Tariff Lookup in International Express Matrix
+// HELPER: Exact Tariff Lookup in International Express Saver Matrix (100% exact match to sheet)
 function lookupInternationalRate(colKey, weight, product = "Package") {
   const table = intlRates.table;
   if (!table || table.length === 0) return 0;
@@ -129,44 +129,29 @@ app.post('/api/forex/sync', (req, res) => {
   });
 });
 
-// REST ENDPOINT: Get Countries & Zones Directory with Separate Aramex & UPS Identifications
+// REST ENDPOINT: Get Countries & Zones Directory
 app.get('/api/countries-and-zones', (req, res) => {
   if (fs.existsSync(countryZonePath)) {
     countryZoneDirectory = JSON.parse(fs.readFileSync(countryZonePath, 'utf8'));
   }
 
-  // 1. Aramex Network Classification
-  const aramexGCC = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].map(code => {
+  const gccCodes = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'];
+  const aramexGCC = gccCodes.map(code => {
     const c = countryZoneDirectory[code] || {};
     return {
       code,
       name: c.name || code,
       region: c.region || 'GCC',
-      service: c.aramexService || 'GCC Dedicated Network',
-      tariffCard: c.aramexTariffCard || 'Dedicated GCC Non-Doc Tariff'
+      service: 'Aramex GCC Network (Exclusive)',
+      tariffCard: 'Dedicated GCC Non-Doc Rate Sheet'
     };
   });
 
-  const aramexZones = { '2': [], '3': [], '4': [], '5': [], '6': [], '7': [] };
-
-  // 2. UPS Network Classification
   const upsDirectLanes = [];
   const upsZones = { '2': [], '3': [], '4': [], '5': [], '6': [], '7': [] };
 
   Object.keys(countryZoneDirectory).forEach(iso => {
     const c = countryZoneDirectory[iso];
-    // Populate Aramex Zones
-    if (aramexZones[c.zone]) {
-      aramexZones[c.zone].push({
-        code: iso,
-        name: c.name,
-        region: c.region,
-        isGCC: ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].includes(iso),
-        service: c.aramexService,
-        tariffCard: c.aramexTariffCard
-      });
-    }
-    // Populate UPS Zones & Direct Lanes
     if (c.directCol) {
       upsDirectLanes.push({
         code: iso,
@@ -174,7 +159,7 @@ app.get('/api/countries-and-zones', (req, res) => {
         column: c.directCol,
         zone: c.zone,
         region: c.region,
-        service: c.upsService
+        service: `UPS Express Saver Direct Lane (${c.directCol})`
       });
     } else if (upsZones[c.zone]) {
       upsZones[c.zone].push({
@@ -182,7 +167,7 @@ app.get('/api/countries-and-zones', (req, res) => {
         name: c.name,
         zone: c.zone,
         region: c.region,
-        service: c.upsService
+        service: `UPS Worldwide Express Saver (Zone ${c.zone})`
       });
     }
   });
@@ -191,23 +176,26 @@ app.get('/api/countries-and-zones', (req, res) => {
     countries: countryZoneDirectory,
     totalCount: Object.keys(countryZoneDirectory).length,
     availableColumns: intlRates.columns,
+    gccCountries: gccCodes,
     aramex: {
-      networkTitle: "Aramex Express Network (Priority GCC Hub & Global)",
-      description: "Dedicated lower base rates for GCC (Bahrain, Oman, Kuwait, Qatar, KSA) via GCC Non-Doc Rate Card; global network routed via Levant & Partner Zones.",
-      gccNetwork: aramexGCC,
-      zones: aramexZones
+      networkTitle: "Aramex Network (Exclusive to GCC Destinations)",
+      description: "Aramex service is strictly configured and quoted for GCC countries only (Bahrain, Oman, Kuwait, Qatar, Saudi Arabia, UAE). Non-GCC destinations route exclusively via UPS.",
+      gccNetwork: aramexGCC
     },
     ups: {
-      networkTitle: "UPS Worldwide Express Saver (37 Direct Lanes & Zones 2-7)",
-      description: "37 direct country columns published with dedicated tariffs, plus all other global destinations mapped into Worldwide Zones 2 to 7.",
+      networkTitle: "UPS Worldwide Express Saver (Global Coverage: 37 Direct Lanes & Zones 2-7)",
+      description: "37 direct country columns published with dedicated tariffs ex-Dubai, plus all other global destinations mapped into Worldwide Zones 2 to 7.",
       directLanes: upsDirectLanes,
       zones: upsZones
     }
   });
 });
 
-// REST ENDPOINT: Get & Update Airlines KTM ➔ DXB Rates (Persistent)
+// REST ENDPOINT: Get & Update Airlines KTM ➔ DXB Rates in NPR (Persistent)
 app.get('/api/airlines', (req, res) => {
+  if (fs.existsSync(airlinesPath)) {
+    airlinesData = JSON.parse(fs.readFileSync(airlinesPath, 'utf8'));
+  }
   res.json(airlinesData);
 });
 
@@ -220,41 +208,27 @@ app.post('/api/airlines/save', (req, res) => {
     airlinesData.adminDefaultSlab = String(adminDefaultSlab);
   }
   fs.writeFileSync(airlinesPath, JSON.stringify(airlinesData, null, 2));
-  res.json({ success: true, message: "Airlines matrix saved permanently", data: airlinesData });
+  res.json({ success: true, message: "Airlines matrix saved permanently in NPR", data: airlinesData });
 });
 
-app.post('/api/airlines/add', (req, res) => {
-  const { id, name, flight, slabs } = req.body;
-  if (!id || !name || !slabs) {
-    return res.status(400).json({ error: "Missing airline details (id, name, slabs)" });
-  }
-  const existingIdx = airlinesData.carriers.findIndex(c => c.id === id);
-  if (existingIdx >= 0) {
-    airlinesData.carriers[existingIdx] = { id, name, flight, slabs };
-  } else {
-    airlinesData.carriers.push({ id, name, flight, slabs });
-  }
-  fs.writeFileSync(airlinesPath, JSON.stringify(airlinesData, null, 2));
-  res.json({ success: true, message: "Airline added/updated successfully", data: airlinesData });
-});
-
-// REST ENDPOINT: Get & Update Agency Clearance (Per Kg)
+// REST ENDPOINT: Get & Update Single Dubai Agency Clearance Rate (Default: AED 1.00 / kg)
 app.get('/api/settings/agency-clearance', (req, res) => {
+  if (fs.existsSync(agencyClearancePath)) {
+    agencyClearanceData = JSON.parse(fs.readFileSync(agencyClearancePath, 'utf8'));
+  }
   res.json(agencyClearanceData);
 });
 
 app.post('/api/settings/agency-clearance', (req, res) => {
-  const { ratePerKgAED, minChargeAED, dubaiHubPerKgAED, dubaiHubMinAED } = req.body;
-  if (ratePerKgAED !== undefined) agencyClearanceData.ratePerKgAED = parseFloat(ratePerKgAED);
-  if (minChargeAED !== undefined) agencyClearanceData.minChargeAED = parseFloat(minChargeAED);
-  if (dubaiHubPerKgAED !== undefined) agencyClearanceData.dubaiHubPerKgAED = parseFloat(dubaiHubPerKgAED);
-  if (dubaiHubMinAED !== undefined) agencyClearanceData.dubaiHubMinAED = parseFloat(dubaiHubMinAED);
-
+  const { ratePerKgAED } = req.body;
+  if (ratePerKgAED !== undefined) {
+    agencyClearanceData.ratePerKgAED = parseFloat(ratePerKgAED);
+  }
   fs.writeFileSync(agencyClearancePath, JSON.stringify(agencyClearanceData, null, 2));
-  res.json({ success: true, message: "Agency clearance settings updated", data: agencyClearanceData });
+  res.json({ success: true, message: "Dubai agency clearance fee updated", data: agencyClearanceData });
 });
 
-// REST ENDPOINT: Smart AI Rate Sheet Uploader & Analyzer
+// REST ENDPOINT: Smart AI Rate Sheet Ingestion Engine
 app.post('/api/rates/upload', upload.single('rateSheet'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded. Please upload a .xlsx or .csv rate sheet." });
@@ -263,7 +237,6 @@ app.post('/api/rates/upload', upload.single('rateSheet'), (req, res) => {
   try {
     const analysis = SheetAnalyzer.analyzeWorkbook(req.file.path);
 
-    // If new rates were extracted, update memory & disk
     if (analysis.extractedData.gccRates) {
       gccRates = analysis.extractedData.gccRates;
       fs.writeFileSync(gccRatesPath, JSON.stringify(gccRates, null, 2));
@@ -282,269 +255,214 @@ app.post('/api/rates/upload', upload.single('rateSheet'), (req, res) => {
     console.error("Sheet Analysis Error:", err);
     res.status(500).json({ error: `Failed to analyze rate sheet: ${err.message}` });
   } finally {
-    // Clean up temporary file
     if (fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
   }
 });
 
-// REST ENDPOINT: Comprehensive Total Cost Calculator with Step-by-Step Mapping & Audit Engine
+// REST ENDPOINT: Precise Logistics Landed Cost Calculator (Primary: NPR)
 app.post('/api/calculate', (req, res) => {
   try {
     const {
-      actualWeight = 1.0,
-      dimL = 20,
-      dimW = 20,
-      dimH = 15,
-      destination = "SA", // Country Code
-      declaredValueUSD = 100,
+      actualWeight = 20.0, // Default 20 kgs
+      dimL = 40,
+      dimW = 35,
+      dimH = 30,
+      destination = "SA", // Default Saudi Arabia
       airlineId = "flydubai",
       slab = airlinesData.adminDefaultSlab || "300",
       productType = "Package",
       rateType = "sell",
-      agencyClearanceRateAED = agencyClearanceData.ratePerKgAED,
-      dubaiHubRateAED = agencyClearanceData.dubaiHubPerKgAED
+      dubaiAgencyClearanceAED = (agencyClearanceData.ratePerKgAED !== undefined ? agencyClearanceData.ratePerKgAED : 1.00),
+      fuelSurchargeAramexPct = 14.5,
+      fuelSurchargeUpsPct = 16.0,
+      includeDutiesAndTaxes = false // No VAT or Duty by default
     } = req.body;
 
     const nprPerAed = rateType === 'buy' ? forexRates.rates["AED"].buy : forexRates.rates["AED"].sell;
-    const nprPerUsd = rateType === 'buy' ? forexRates.rates["USD"].buy : forexRates.rates["USD"].sell;
-    const aedPerUsd = 3.6725;
+    const gccCodes = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'];
+    const isGccDestination = gccCodes.includes(destination);
 
     // 1. Chargeable Weight Calculation
     const volWeight = (dimL * dimW * dimH) / 5000;
     const chargeableWeight = Math.max(actualWeight, volWeight);
 
-    // 2. Air Cargo Line-Haul (KTM ➔ DXB)
+    // 2. Air Cargo Line-Haul (KTM ➔ DXB) in NPR
     const airline = airlinesData.carriers.find(c => c.id === airlineId) || airlinesData.carriers[0];
-    const airRateUsdPerKg = (airline.slabs && airline.slabs[slab]) ? airline.slabs[slab] : 1.05;
-    const airRateAedPerKg = airRateUsdPerKg * aedPerUsd;
-    const airFreightAED = chargeableWeight * airRateAedPerKg;
+    const airRateNprPerKg = (airline.slabs && airline.slabs[slab]) ? airline.slabs[slab] : 160;
+    const airFreightNPR = chargeableWeight * airRateNprPerKg;
+    const airFreightAED = airFreightNPR / nprPerAed;
 
-    // 3. Agency Clearance (Per Kilo)
-    const activeAgencyRate = parseFloat(agencyClearanceRateAED) || 1.50;
-    const agencyClearanceAED = Math.max(agencyClearanceData.minChargeAED || 25, chargeableWeight * activeAgencyRate);
+    // 3. Single Dubai Agency / THC / Clearance Charge (Default: AED 1.00 / kg)
+    const activeAgencyRateAED = parseFloat(dubaiAgencyClearanceAED) || 1.00;
+    const dubaiClearanceAED = chargeableWeight * activeAgencyRateAED;
+    const dubaiClearanceNPR = dubaiClearanceAED * nprPerAed;
 
-    // 4. Dubai Hub Transit Clearance (Per Kilo)
-    const activeHubRate = parseFloat(dubaiHubRateAED) || 2.00;
-    const dubaiHubAED = Math.max(agencyClearanceData.dubaiHubMinAED || 45, chargeableWeight * activeHubRate);
-
-    // 5. Destination & Zone Resolution
+    // 4. Destination & Column Resolution
     const countryInfo = countryZoneDirectory[destination] || {
       name: destination,
       code: destination,
       directCol: null,
       zone: "4",
-      region: "Global",
-      aramexService: "Aramex International Network",
-      aramexTariffCard: "International Express Matrix (Zone 4)",
-      upsService: "UPS Worldwide Express Saver (Zone 4)",
-      upsTariffCol: "4",
-      customs: { deMinimisUSD: 50, vatRate: 0.10, dutyRate: 0.05, ddpFeeUSD: 10.00 }
+      region: "Global"
     };
-
-    // Determine Tariff Column in International Express Sheet
     const colKey = countryInfo.directCol ? countryInfo.directCol : countryInfo.zone;
 
-    // 6. Calculate Aramex Base Freight
-    let aramexBaseAED = 0;
-    let aramexSheetName = "International Matrix";
+    // 5. Aramex Calculation (STRICTLY FOR GCC DESTINATIONS ONLY)
+    let aramexResult = null;
     const gccCountryNames = { "BH": "Bahrain", "OM": "Oman", "KW": "Kuwait", "QA": "Qatar", "SA": "KSA" };
 
-    if (gccCountryNames[destination] && gccRates[gccCountryNames[destination]]) {
-      // Use dedicated GCC Rate Sheet
-      aramexSheetName = "GCC Rates (Dedicated Tariff)";
-      const gccTable = gccRates[gccCountryNames[destination]];
-      if (chargeableWeight <= 0.5) aramexBaseAED = gccTable["0.5"];
-      else if (chargeableWeight <= 1.0) aramexBaseAED = gccTable["1"];
-      else if (chargeableWeight <= 1.5) aramexBaseAED = gccTable["1.5"];
-      else if (chargeableWeight <= 2.0) aramexBaseAED = gccTable["2"];
-      else if (chargeableWeight <= 2.5) aramexBaseAED = gccTable["2.5"];
-      else if (chargeableWeight <= 3.0) aramexBaseAED = gccTable["3"];
-      else if (chargeableWeight <= 3.5) aramexBaseAED = gccTable["3.5"];
-      else if (chargeableWeight <= 4.0) aramexBaseAED = gccTable["4"];
-      else if (chargeableWeight <= 4.5) aramexBaseAED = gccTable["4.5"];
-      else if (chargeableWeight <= 5.0) aramexBaseAED = gccTable["5"];
-      else {
-        const extraKg = Math.ceil(chargeableWeight - 5.0);
-        aramexBaseAED = gccTable["5"] + (extraKg * (gccTable["Every Addtnl kg"] || 8.0));
+    if (isGccDestination) {
+      let aramexBaseAED = 0;
+      const cName = gccCountryNames[destination];
+      if (cName && gccRates[cName]) {
+        const gccTable = gccRates[cName];
+        if (chargeableWeight <= 0.5) aramexBaseAED = gccTable["0.5"];
+        else if (chargeableWeight <= 1.0) aramexBaseAED = gccTable["1"];
+        else if (chargeableWeight <= 1.5) aramexBaseAED = gccTable["1.5"];
+        else if (chargeableWeight <= 2.0) aramexBaseAED = gccTable["2"];
+        else if (chargeableWeight <= 2.5) aramexBaseAED = gccTable["2.5"];
+        else if (chargeableWeight <= 3.0) aramexBaseAED = gccTable["3"];
+        else if (chargeableWeight <= 3.5) aramexBaseAED = gccTable["3.5"];
+        else if (chargeableWeight <= 4.0) aramexBaseAED = gccTable["4"];
+        else if (chargeableWeight <= 4.5) aramexBaseAED = gccTable["4.5"];
+        else if (chargeableWeight <= 5.0) aramexBaseAED = gccTable["5"];
+        else {
+          const extraKg = Math.ceil(chargeableWeight - 5.0);
+          aramexBaseAED = gccTable["5"] + (extraKg * (gccTable["Every Addtnl kg"] || 8.0));
+        }
+      } else {
+        aramexBaseAED = lookupInternationalRate(colKey, chargeableWeight, productType);
       }
+
+      // Surcharges sourced from Dubai office
+      const aramexFscRate = parseFloat(fuelSurchargeAramexPct) / 100;
+      const aramexFscAED = aramexBaseAED * aramexFscRate;
+      const aramexPostalAED = chargeableWeight <= 30.0 ? Math.max(2.00, aramexBaseAED * 0.10) : 0;
+      const aramexSurchargesAED = aramexFscAED + aramexPostalAED;
+
+      // Landed Quotation = KTM-DXB Air Linehaul + Dubai Agency Clearance + Last-Mile Delivery with Surcharges
+      const aramexTotalLmdAED = aramexBaseAED + aramexSurchargesAED;
+      const aramexGrandTotalAED = airFreightAED + dubaiClearanceAED + aramexTotalLmdAED;
+      const aramexGrandTotalNPR = airFreightNPR + dubaiClearanceNPR + (aramexTotalLmdAED * nprPerAed);
+
+      aramexResult = {
+        available: true,
+        name: "Aramex Express (GCC Corridor)",
+        source: "Dedicated GCC Non-Doc Sheet (ex-DXB)",
+        baseFreightAED: parseFloat(aramexBaseAED.toFixed(2)),
+        baseFreightNPR: parseFloat((aramexBaseAED * nprPerAed).toFixed(2)),
+        fuelSurchargePct: `${fuelSurchargeAramexPct}%`,
+        fuelSurchargeAED: parseFloat(aramexFscAED.toFixed(2)),
+        postalTaxAED: parseFloat(aramexPostalAED.toFixed(2)),
+        totalSurchargesAED: parseFloat(aramexSurchargesAED.toFixed(2)),
+        totalSurchargesNPR: parseFloat((aramexSurchargesAED * nprPerAed).toFixed(2)),
+        totalLmdWithSurchargesAED: parseFloat(aramexTotalLmdAED.toFixed(2)),
+        totalLmdWithSurchargesNPR: parseFloat((aramexTotalLmdAED * nprPerAed).toFixed(2)),
+        grandTotalNPR: parseFloat(aramexGrandTotalNPR.toFixed(2)),
+        grandTotalAED: parseFloat(aramexGrandTotalAED.toFixed(2))
+      };
     } else {
-      // Use International Express Sheet Column
-      aramexSheetName = `International Express (${colKey})`;
-      aramexBaseAED = lookupInternationalRate(colKey, chargeableWeight, productType);
+      aramexResult = {
+        available: false,
+        name: "Aramex Express",
+        reason: "Aramex is configured exclusively for GCC destinations (Bahrain, Oman, Kuwait, Qatar, Saudi Arabia, UAE). This global destination is routed via UPS.",
+        grandTotalNPR: 0,
+        grandTotalAED: 0
+      };
     }
 
-    // 7. Calculate UPS Base Freight
-    // UPS uses the exact International Matrix column with standard UPS premium factor
-    const upsBaseAED = lookupInternationalRate(colKey, chargeableWeight, productType) * 1.05;
+    // 6. UPS Calculation (EXACT MATCH AS PER SHEET - NO MARKUP)
+    const upsBaseAED = lookupInternationalRate(colKey, chargeableWeight, productType);
+    const upsFscRate = parseFloat(fuelSurchargeUpsPct) / 100;
+    const upsFscAED = upsBaseAED * upsFscRate;
+    const upsPostalAED = chargeableWeight <= 30.0 ? Math.max(2.00, upsBaseAED * 0.10) : 0;
+    const upsSurchargesAED = upsFscAED + upsPostalAED;
 
-    // 8. Surcharges (Fuel, Postal, VAT)
-    const aramexFscAED = aramexBaseAED * 0.145; // 14.5% FSC
-    const aramexPostalAED = Math.max(2.00, aramexBaseAED * 0.10);
-    const aramexUaeVatAED = (aramexBaseAED + aramexFscAED + dubaiHubAED) * 0.05;
+    const upsTotalLmdAED = upsBaseAED + upsSurchargesAED;
+    const upsGrandTotalAED = airFreightAED + dubaiClearanceAED + upsTotalLmdAED;
+    const upsGrandTotalNPR = airFreightNPR + dubaiClearanceNPR + (upsTotalLmdAED * nprPerAed);
 
-    const upsFscAED = upsBaseAED * 0.160; // 16.0% FSC
-    const upsPostalAED = Math.max(2.00, upsBaseAED * 0.10);
-    const upsUaeVatAED = (upsBaseAED + upsFscAED + dubaiHubAED) * 0.05;
+    const upsResult = {
+      available: true,
+      name: "UPS Worldwide Express / Saver",
+      source: countryInfo.directCol ? `Express Saver Matrix (Direct Lane: ${countryInfo.directCol})` : `Express Saver Matrix (Zone: ${countryInfo.zone})`,
+      columnUsed: colKey,
+      baseFreightAED: parseFloat(upsBaseAED.toFixed(2)),
+      baseFreightNPR: parseFloat((upsBaseAED * nprPerAed).toFixed(2)),
+      fuelSurchargePct: `${fuelSurchargeUpsPct}%`,
+      fuelSurchargeAED: parseFloat(upsFscAED.toFixed(2)),
+      postalTaxAED: parseFloat(upsPostalAED.toFixed(2)),
+      totalSurchargesAED: parseFloat(upsSurchargesAED.toFixed(2)),
+      totalSurchargesNPR: parseFloat((upsSurchargesAED * nprPerAed).toFixed(2)),
+      totalLmdWithSurchargesAED: parseFloat(upsTotalLmdAED.toFixed(2)),
+      totalLmdWithSurchargesNPR: parseFloat((upsTotalLmdAED * nprPerAed).toFixed(2)),
+      grandTotalNPR: parseFloat(upsGrandTotalNPR.toFixed(2)),
+      grandTotalAED: parseFloat(upsGrandTotalAED.toFixed(2))
+    };
 
-    // 9. Destination Customs, Duty & Regulatory Fees
-    const cRule = countryInfo.customs || { deMinimisUSD: 50, vatRate: 0.10, dutyRate: 0.05, ddpFeeUSD: 10.00 };
-    const declaredValueAED = declaredValueUSD * aedPerUsd;
-    let dutyAED = 0;
-    if (declaredValueUSD > (cRule.deMinimisUSD || 0)) {
-      dutyAED = declaredValueAED * (cRule.dutyRate || 0.05);
-    }
-    const destVatAED = (declaredValueAED + dutyAED) * (cRule.vatRate || 0.00);
-
-    let regulatoryAED = 0;
-    let regulatoryDesc = "";
-    if (destination === 'SA' || destination === 'KSA') {
-      regulatoryAED = (15 * 0.98) + (7.00 * aedPerUsd);
-      if (declaredValueUSD > 266) regulatoryAED += 30; // Duty tier fee
-      regulatoryDesc = "ZATCA e-Invoicing (15 SAR) + Aramex DDP Fee ($7.00 USD)";
-    } else if (destination === 'OM' || destination === 'Oman') {
-      regulatoryAED = (1.0 * 9.5) + (2.60 * aedPerUsd) + (aramexBaseAED * 0.06);
-      regulatoryDesc = "Bayan (1 OMR) + 6% TRA Surcharge + DDP Fee ($2.60 USD)";
-    } else if (destination === 'BH' || destination === 'Bahrain') {
-      regulatoryAED = (13.26 * aedPerUsd) + (10.0 * 9.7);
-      regulatoryDesc = "Customs Stamp ($13.26 USD) + TRA Inspection Fee (10 BHD)";
-    } else if (destination === 'KW' || destination === 'Kuwait') {
-      regulatoryAED = (1.0 * 12.0) + (3.0 * 12.0);
-      regulatoryDesc = "Kuwait Bayan (1 KWD) + DDP Handling (3 KWD)";
-    } else if (destination === 'QA' || destination === 'Qatar') {
-      regulatoryAED = (20 * 1.01) + (6.85 * aedPerUsd);
-      regulatoryDesc = "Qatar Bayan (20 QAR) + DDP Handling ($6.85 USD)";
-    } else {
-      regulatoryAED = (cRule.ddpFeeUSD || 10.0) * aedPerUsd;
-      regulatoryDesc = `Standard Destination DDP Broker & Clearance Fee ($${(cRule.ddpFeeUSD || 10).toFixed(2)} USD)`;
-    }
-
-    const totalDestFeesAED = dutyAED + destVatAED + regulatoryAED;
-
-    // 10. Grand Totals
-    const aramexGrandAED = airFreightAED + agencyClearanceAED + dubaiHubAED + aramexBaseAED + aramexFscAED + aramexPostalAED + aramexUaeVatAED + totalDestFeesAED;
-    const upsGrandAED = airFreightAED + agencyClearanceAED + dubaiHubAED + upsBaseAED + upsFscAED + upsPostalAED + upsUaeVatAED + totalDestFeesAED;
-
-    const toNPR = (aed) => parseFloat((aed * nprPerAed).toFixed(2));
-    const toUSD = (aed) => parseFloat((aed / aedPerUsd).toFixed(2));
-
-    // 11. Complete Step-by-Step Transparent Audit Trail
+    // 7. Precise Mathematical Audit Trail
     const stepByStepAudit = [
       {
         step: 1,
-        title: "Weight & Volumetric Divisor Assessment",
-        rule: "Chargeable weight is the greater of Dead Weight or Volumetric Weight (L × W × H / 5000 cm³)",
-        formula: `Volumetric Weight = (${dimL} × ${dimW} × ${dimH}) / 5000 = ${volWeight.toFixed(2)} kg`,
-        comparison: `Actual (${actualWeight.toFixed(2)} kg) vs Volumetric (${volWeight.toFixed(2)} kg)`,
-        chargeableKg: parseFloat(chargeableWeight.toFixed(2)),
-        explanation: `Since ${chargeableWeight.toFixed(2)} kg is the higher value, all air cargo, hub transit, agency clearance, and courier freight tariffs are billed on ${chargeableWeight.toFixed(2)} kg.`
+        title: "Chargeable Weight Determination",
+        rule: "Evaluated on chargeable weight = max(Dead Weight, Volumetric L×W×H/5000)",
+        details: `Actual Weight: ${actualWeight} kg | Dimensions: ${dimL}×${dimW}×${dimH} cm = ${volWeight.toFixed(2)} kg volumetric`,
+        chargeableKg: chargeableWeight,
+        explanation: `All linehaul, agency clearance, and last-mile freight calculations are billed on ${chargeableWeight.toFixed(2)} kg.`
       },
       {
         step: 2,
-        title: "KTM ➔ DXB Middle-Mile Air Cargo Freight",
-        rule: `Origin Nepal (KTM) to Dubai (DXB) flight sector via ${airline.name}`,
-        formula: `${chargeableWeight.toFixed(2)} kg × $${airRateUsdPerKg.toFixed(2)}/kg = $${(chargeableWeight * airRateUsdPerKg).toFixed(2)} USD`,
-        slabApplied: `+${slab} kg Volume Break Slab`,
-        amountAED: parseFloat(airFreightAED.toFixed(2)),
-        amountNPR: toNPR(airFreightAED),
-        explanation: `Flight equipment: ${airline.flight}. Rate of $${airRateUsdPerKg.toFixed(2)}/kg converts to AED ${airRateAedPerKg.toFixed(2)}/kg using USD peg (3.6725). Total line-haul = AED ${airFreightAED.toFixed(2)} (NPR ${toNPR(airFreightAED).toLocaleString()}).`
+        title: "KTM ➔ DXB Middle-Mile Air Linehaul (in NPR)",
+        rule: `Origin Nepal to Dubai via ${airline.name} (+${slab}kg volume break slab)`,
+        rateNprPerKg: airRateNprPerKg,
+        formula: `${chargeableWeight} kg × NPR ${airRateNprPerKg}/kg = NPR ${airFreightNPR.toLocaleString()}`,
+        amountNPR: parseFloat(airFreightNPR.toFixed(2)),
+        amountAED: parseFloat(airFreightAED.toFixed(2))
       },
       {
         step: 3,
-        title: "Agency Clearance & Dubai Transit Hub Handling",
-        rule: "Per-kilogram fees for Nepal export agency clearance and Dubai Transit Hub handling / THC",
-        agencyClearance: {
-          ratePerKgAED: activeAgencyRate,
-          amountAED: parseFloat(agencyClearanceAED.toFixed(2)),
-          amountNPR: toNPR(agencyClearanceAED),
-          rule: `max(Min AED ${agencyClearanceData.minChargeAED || 25}, ${chargeableWeight.toFixed(2)} kg × AED ${activeAgencyRate}/kg)`
-        },
-        dubaiHubClearance: {
-          ratePerKgAED: activeHubRate,
-          amountAED: parseFloat(dubaiHubAED.toFixed(2)),
-          amountNPR: toNPR(dubaiHubAED),
-          rule: `max(Min AED ${agencyClearanceData.dubaiHubMinAED || 45}, ${chargeableWeight.toFixed(2)} kg × AED ${activeHubRate}/kg)`
-        },
-        totalClearanceAED: parseFloat((agencyClearanceAED + dubaiHubAED).toFixed(2)),
-        totalClearanceNPR: toNPR(agencyClearanceAED + dubaiHubAED)
+        title: "Dubai Agency / THC Clearance (Single Per-Kg Charge)",
+        rule: `Single Dubai agency transit clearance at default AED ${activeAgencyRateAED.toFixed(2)}/kg`,
+        rateAedPerKg: activeAgencyRateAED,
+        rateNprPerKg: parseFloat((activeAgencyRateAED * nprPerAed).toFixed(2)),
+        formula: `${chargeableWeight} kg × AED ${activeAgencyRateAED.toFixed(2)} = AED ${dubaiClearanceAED.toFixed(2)} (NPR ${dubaiClearanceNPR.toFixed(2)})`,
+        amountNPR: parseFloat(dubaiClearanceNPR.toFixed(2)),
+        amountAED: parseFloat(dubaiClearanceAED.toFixed(2))
       },
       {
         step: 4,
-        title: "Last-Mile Delivery Carrier Tariff Resolution",
-        rule: "Algorithmic lookup in validated rate sheets provided by ESHIPPER Dubai",
-        aramexLookup: {
-          sheetQueried: gccCountryNames[destination] ? "GCC Rates (Dedicated Non-Doc Sheet)" : "Express Saver Matrix",
-          columnResolved: gccCountryNames[destination] ? gccCountryNames[destination] : colKey,
-          isDirectCountry: gccCountryNames[destination] !== undefined || countryInfo.directCol !== null,
-          weightSlabMatched: chargeableWeight <= 5.0 ? `${Math.ceil(chargeableWeight * 2) / 2} kg slab` : (gccCountryNames[destination] ? "5kg base + incremental kg" : "Weight slab row"),
-          baseRateAED: parseFloat(aramexBaseAED.toFixed(2)),
-          baseRateNPR: toNPR(aramexBaseAED)
-        },
-        upsLookup: {
-          sheetQueried: "Express Saver (Transit ex-Dubai)",
-          columnResolved: colKey,
-          isDirectCountry: countryInfo.directCol !== null,
-          weightSlabMatched: `${chargeableWeight} kg ceiling row`,
-          baseRateAED: parseFloat(upsBaseAED.toFixed(2)),
-          baseRateNPR: toNPR(upsBaseAED)
+        title: "Last-Mile Delivery Carrier Base Tariff (Exact Rate Sheet)",
+        rule: isGccDestination 
+          ? "GCC destination: Aramex via GCC Dedicated Sheet & UPS via Express Saver Matrix" 
+          : "Non-GCC destination: Quoted exclusively via UPS Worldwide Express Saver (Aramex not applicable)",
+        aramex: isGccDestination ? {
+          sheet: "GCC Rates",
+          rateAED: aramexResult.baseFreightAED,
+          rateNPR: aramexResult.baseFreightNPR
+        } : null,
+        ups: {
+          sheet: "Express Saver Matrix",
+          column: colKey,
+          rateAED: upsResult.baseFreightAED,
+          rateNPR: upsResult.baseFreightNPR
         }
       },
       {
         step: 5,
-        title: "Last-Mile Surcharges & Local Tax Engine",
-        rule: "Standard contractual surcharges: Monthly Fuel Surcharge (FSC), UAE Postal Tax, and FTA Local VAT",
-        aramexSurcharges: {
-          fuelSurchargePct: "14.5%",
-          fuelSurchargeAED: parseFloat(aramexFscAED.toFixed(2)),
-          postalTaxRule: "max(AED 2.00, 10% of base freight for parcels ≤ 30kg)",
-          postalTaxAED: parseFloat(aramexPostalAED.toFixed(2)),
-          uaeVatAED: parseFloat(aramexUaeVatAED.toFixed(2)),
-          totalSurchargesAED: parseFloat((aramexFscAED + aramexPostalAED + aramexUaeVatAED).toFixed(2))
-        },
-        upsSurcharges: {
-          fuelSurchargePct: "16.0%",
-          fuelSurchargeAED: parseFloat(upsFscAED.toFixed(2)),
-          postalTaxRule: "max(AED 2.00, 10% of base freight for parcels ≤ 30kg)",
-          postalTaxAED: parseFloat(upsPostalAED.toFixed(2)),
-          uaeVatAED: parseFloat(upsUaeVatAED.toFixed(2)),
-          totalSurchargesAED: parseFloat((upsFscAED + upsPostalAED + upsUaeVatAED).toFixed(2))
-        }
+        title: "Dubai Office Surcharges (Fuel Index & UAE Postal Tax)",
+        rule: `Fuel Surcharge sourced directly from Dubai office (Aramex: ${fuelSurchargeAramexPct}%, UPS: ${fuelSurchargeUpsPct}%) + UAE Postal Tax (max AED 2 or 10% on ≤30kg)`,
+        aramexSurcharges: isGccDestination ? aramexResult.totalSurchargesNPR : 0,
+        upsSurcharges: upsResult.totalSurchargesNPR
       },
       {
         step: 6,
-        title: "Destination Customs Duties, Import VAT & DDP Platform Fees",
-        rule: `Assessment based on destination (${countryInfo.name}) de minimis threshold ($${(cRule.deMinimisUSD || 50).toFixed(0)} USD)`,
-        declaredValueUSD: declaredValueUSD,
-        deMinimisUSD: cRule.deMinimisUSD || 50,
-        isSubjectToDuty: declaredValueUSD > (cRule.deMinimisUSD || 50),
-        customsDutyAED: parseFloat(dutyAED.toFixed(2)),
-        importVatRate: `${((cRule.vatRate || 0) * 100).toFixed(1)}%`,
-        importVatAED: parseFloat(destVatAED.toFixed(2)),
-        regulatoryAndDDPFeesAED: parseFloat(regulatoryAED.toFixed(2)),
-        totalDestFeesAED: parseFloat(totalDestFeesAED.toFixed(2)),
-        totalDestFeesNPR: toNPR(totalDestFeesAED),
-        regulatoryBreakdown: regulatoryDesc
-      },
-      {
-        step: 7,
-        title: "Nepal Rastra Bank (NRB) Dual Currency Final Landed Cost",
-        rule: `Converted at active NRB ${rateType.toUpperCase()} rate: 1 AED = ${nprPerAed.toFixed(2)} NPR`,
-        forexRates: {
-          aedToNpr: nprPerAed,
-          usdToNpr: nprPerUsd,
-          source: "Nepal Rastra Bank (https://www.nrb.org.np/forex/)"
-        },
-        aramexFinal: {
-          grandTotalAED: parseFloat(aramexGrandAED.toFixed(2)),
-          grandTotalNPR: toNPR(aramexGrandAED),
-          grandTotalUSD: toUSD(aramexGrandAED)
-        },
-        upsFinal: {
-          grandTotalAED: parseFloat(upsGrandAED.toFixed(2)),
-          grandTotalNPR: toNPR(upsGrandAED),
-          grandTotalUSD: toUSD(upsGrandAED)
-        }
+        title: "Final Landed Cost Quotation (in NPR)",
+        rule: "Total Landed Cost = KTM-DXB Air Linehaul + Dubai Agency Clearance + Last-Mile Delivery with Surcharges (VAT & Duty omitted by default)",
+        formula: "Air Linehaul (NPR) + Dubai Clearance (NPR) + Last Mile Delivery & Surcharges (NPR)",
+        aramexTotalNPR: isGccDestination ? aramexResult.grandTotalNPR : null,
+        upsTotalNPR: upsResult.grandTotalNPR
       }
     ];
 
@@ -554,10 +472,10 @@ app.post('/api/calculate', (req, res) => {
         hub: "Dubai Hub (DXB Transit)",
         destination: countryInfo.name,
         countryCode: destination,
+        isGCC: isGccDestination,
         tariffColumnUsed: colKey,
         isDirectColumn: countryInfo.directCol !== null,
         zone: countryInfo.zone,
-        region: countryInfo.region,
         weight: {
           actualKg: actualWeight,
           volumetricKg: parseFloat(volWeight.toFixed(2)),
@@ -566,59 +484,25 @@ app.post('/api/calculate', (req, res) => {
       },
       forex: {
         nprPerAed: nprPerAed,
-        nprPerUsd: nprPerUsd,
         rateType: rateType
       },
-      middleMileAir: {
+      linehaul: {
         airline: airline.name,
         flight: airline.flight,
         slab: `+${slab} kg`,
-        ratePerKgUSD: airRateUsdPerKg,
-        ratePerKgAED: parseFloat(airRateAedPerKg.toFixed(2)),
-        amountAED: parseFloat(airFreightAED.toFixed(2)),
-        amountNPR: toNPR(airFreightAED)
+        ratePerKgNPR: airRateNprPerKg,
+        amountNPR: parseFloat(airFreightNPR.toFixed(2)),
+        amountAED: parseFloat(airFreightAED.toFixed(2))
       },
-      clearance: {
-        agencyRatePerKgAED: activeAgencyRate,
-        agencyClearanceAED: parseFloat(agencyClearanceAED.toFixed(2)),
-        agencyClearanceNPR: toNPR(agencyClearanceAED),
-        dubaiHubRatePerKgAED: activeHubRate,
-        dubaiHubAED: parseFloat(dubaiHubAED.toFixed(2)),
-        dubaiHubNPR: toNPR(dubaiHubAED)
-      },
-      destinationTaxes: {
-        customsDutyAED: parseFloat(dutyAED.toFixed(2)),
-        importVatAED: parseFloat(destVatAED.toFixed(2)),
-        regulatoryFeesAED: parseFloat(regulatoryAED.toFixed(2)),
-        regulatoryDesc: regulatoryDesc,
-        totalAED: parseFloat(totalDestFeesAED.toFixed(2)),
-        totalNPR: toNPR(totalDestFeesAED)
+      dubaiAgencyClearance: {
+        ratePerKgAED: activeAgencyRateAED,
+        ratePerKgNPR: parseFloat((activeAgencyRateAED * nprPerAed).toFixed(2)),
+        amountAED: parseFloat(dubaiClearanceAED.toFixed(2)),
+        amountNPR: parseFloat(dubaiClearanceNPR.toFixed(2))
       },
       carriers: {
-        aramex: {
-          name: "Aramex Express",
-          source: aramexSheetName,
-          baseFreightAED: parseFloat(aramexBaseAED.toFixed(2)),
-          baseFreightNPR: toNPR(aramexBaseAED),
-          fuelSurchargeAED: parseFloat(aramexFscAED.toFixed(2)),
-          postalTaxAED: parseFloat(aramexPostalAED.toFixed(2)),
-          uaeVatAED: parseFloat(aramexUaeVatAED.toFixed(2)),
-          grandTotalAED: parseFloat(aramexGrandAED.toFixed(2)),
-          grandTotalNPR: toNPR(aramexGrandAED),
-          grandTotalUSD: toUSD(aramexGrandAED)
-        },
-        ups: {
-          name: "UPS Worldwide Express / Saver",
-          source: `Express Saver Matrix (${colKey})`,
-          baseFreightAED: parseFloat(upsBaseAED.toFixed(2)),
-          baseFreightNPR: toNPR(upsBaseAED),
-          fuelSurchargeAED: parseFloat(upsFscAED.toFixed(2)),
-          postalTaxAED: parseFloat(upsPostalAED.toFixed(2)),
-          uaeVatAED: parseFloat(upsUaeVatAED.toFixed(2)),
-          grandTotalAED: parseFloat(upsGrandAED.toFixed(2)),
-          grandTotalNPR: toNPR(upsGrandAED),
-          grandTotalUSD: toUSD(upsGrandAED)
-        }
+        aramex: aramexResult,
+        ups: upsResult
       },
       stepByStepAudit: stepByStepAudit
     });
@@ -631,10 +515,10 @@ app.post('/api/calculate', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`================================================================`);
-  console.log(`Nepal ➔ Dubai Hub Smart Multi-Carrier Logistics Engine 3.1`);
+  console.log(`Nepal ➔ Dubai Hub Precision Logistics Engine 3.2 (NPR Primary)`);
   console.log(`Server running at: http://localhost:${PORT}`);
   console.log(`Live NRB Exchange Rate: 1 AED = ${forexRates.rates["AED"].sell} NPR`);
-  console.log(`Datasets loaded: GCC & International Express (${intlRates.columns.length} columns)`);
-  console.log(`Countries Directory: ${Object.keys(countryZoneDirectory).length} countries mapped`);
+  console.log(`Default Weight: 20 kgs | Agency Clearance: AED 1.00/kg`);
+  console.log(`Aramex: Exclusive to GCC | UPS: Global Express`);
   console.log(`================================================================`);
 });

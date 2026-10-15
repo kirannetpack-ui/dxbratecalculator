@@ -1,7 +1,4 @@
 {
-  "ratePerKgAED": 1.5,
-  "minChargeAED": 25,
-  "dubaiHubPerKgAED": 2,
-  "dubaiHubMinAED": 45,
-  "description": "Editable agency and customs clearance fee charged on chargeable weight"
+  "ratePerKgAED": 1.00,
+  "description": "Dubai agency / THC / clearance fee (AED 1.00 per kg default)"
 }

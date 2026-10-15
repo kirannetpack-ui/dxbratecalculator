@@ -5,6 +5,7 @@ const fs = require('fs');
 const https = require('https');
 const multer = require('multer');
 const SheetAnalyzer = require('./sheet_analyzer');
+const fuelSurchargeSync = require('./fuel_surcharge_sync');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -228,6 +229,32 @@ app.post('/api/settings/agency-clearance', (req, res) => {
   res.json({ success: true, message: "Dubai agency clearance fee updated", data: agencyClearanceData });
 });
 
+// REST ENDPOINT: Get Fuel Surcharges (Official Sourced Dubai Portals)
+app.get('/api/fuel-surcharges', (req, res) => {
+  res.json(fuelSurchargeSync.getData());
+});
+
+// REST ENDPOINT: Live Sync Fuel Surcharges from Official Carrier Pages
+app.post('/api/fuel-surcharges/sync', async (req, res) => {
+  try {
+    const result = await fuelSurchargeSync.syncSurcharges();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// REST ENDPOINT: Update Carrier Fuel Surcharge (Direct Dubai Circular Override)
+app.post('/api/fuel-surcharges/update', (req, res) => {
+  try {
+    const { carrier, ratePercent, note, effectiveDate } = req.body;
+    const result = fuelSurchargeSync.updateSurcharge(carrier, ratePercent, note, effectiveDate);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // REST ENDPOINT: Smart AI Rate Sheet Ingestion Engine
 app.post('/api/rates/upload', upload.single('rateSheet'), (req, res) => {
   if (!req.file) {
@@ -275,10 +302,17 @@ app.post('/api/calculate', (req, res) => {
       productType = "Package",
       rateType = "sell",
       dubaiAgencyClearanceAED = (agencyClearanceData.ratePerKgAED !== undefined ? agencyClearanceData.ratePerKgAED : 1.00),
-      fuelSurchargeAramexPct = 14.5,
-      fuelSurchargeUpsPct = 16.0,
       includeDutiesAndTaxes = false // No VAT or Duty by default
     } = req.body;
+
+    // Dynamically retrieve official live-sourced Dubai fuel surcharges
+    const liveSurcharges = fuelSurchargeSync.getData();
+    const fuelSurchargeAramexPct = req.body.fuelSurchargeAramexPct !== undefined 
+      ? parseFloat(req.body.fuelSurchargeAramexPct) 
+      : (liveSurcharges.aramex ? liveSurcharges.aramex.ratePercent : 14.5);
+    const fuelSurchargeUpsPct = req.body.fuelSurchargeUpsPct !== undefined 
+      ? parseFloat(req.body.fuelSurchargeUpsPct) 
+      : (liveSurcharges.ups ? liveSurcharges.ups.ratePercent : 16.0);
 
     const nprPerAed = rateType === 'buy' ? forexRates.rates["AED"].buy : forexRates.rates["AED"].sell;
     const gccCodes = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'];
@@ -504,6 +538,20 @@ app.post('/api/calculate', (req, res) => {
         aramex: aramexResult,
         ups: upsResult
       },
+      fuelSurcharges: {
+        aramex: {
+          ratePercent: fuelSurchargeAramexPct,
+          sourceUrl: liveSurcharges.aramex.url,
+          status: liveSurcharges.aramex.status,
+          lastUpdated: liveSurcharges.aramex.lastUpdated || liveSurcharges.lastUpdated
+        },
+        ups: {
+          ratePercent: fuelSurchargeUpsPct,
+          sourceUrl: liveSurcharges.ups.url,
+          status: liveSurcharges.ups.status,
+          lastUpdated: liveSurcharges.ups.lastUpdated || liveSurcharges.lastUpdated
+        }
+      },
       stepByStepAudit: stepByStepAudit
     });
 
@@ -514,11 +562,16 @@ app.post('/api/calculate', (req, res) => {
 });
 
 app.listen(PORT, () => {
+  const surcharges = fuelSurchargeSync.getData();
   console.log(`================================================================`);
-  console.log(`Nepal ➔ Dubai Hub Precision Logistics Engine 3.2 (NPR Primary)`);
+  console.log(`Nepal ➔ Dubai Hub Precision Logistics Engine 3.3 (NPR Primary)`);
   console.log(`Server running at: http://localhost:${PORT}`);
   console.log(`Live NRB Exchange Rate: 1 AED = ${forexRates.rates["AED"].sell} NPR`);
   console.log(`Default Weight: 20 kgs | Agency Clearance: AED 1.00/kg`);
   console.log(`Aramex: Exclusive to GCC | UPS: Global Express`);
+  console.log(`Fuel Surcharges Live Monitor: Aramex (${surcharges.aramex.ratePercent}%) | UPS (${surcharges.ups.ratePercent}%)`);
   console.log(`================================================================`);
+
+  // Start automated carrier fuel surcharge monitoring in background
+  fuelSurchargeSync.startAutoSync(12);
 });

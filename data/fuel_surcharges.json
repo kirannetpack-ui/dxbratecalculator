@@ -1,0 +1,53 @@
+{
+  "lastUpdated": "2026-10-15T07:52:48.733Z",
+  "aramex": {
+    "carrier": "Aramex Express",
+    "url": "https://www.aramex.com/us/en/services-solutions/fuel-surcharge",
+    "uaeUrl": "https://www.aramex.com/ae/en/services-solutions/fuel-surcharge",
+    "ratePercent": 14.5,
+    "source": "Aramex Dubai Hub & USGC Jet Fuel Index",
+    "indexBasis": "US Gulf Coast (USGC) Jet Fuel Spot Price & UAE Fuel Price Committee",
+    "frequency": "Monthly (Effective 1st of each month with 2-month data lag)",
+    "status": "Verified & Synchronized",
+    "history": [
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T07:52:48.733Z",
+        "note": "Verified against Aramex Dubai circular"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T07:46:18.496Z",
+        "note": "Verified against Aramex Dubai circular"
+      },
+      {
+        "effectiveDate": "2026-10-01",
+        "ratePercent": 14.5,
+        "note": "Current effective monthly index for UAE/GCC corridor"
+      }
+    ],
+    "lastSynced": "2026-10-15T07:52:48.246Z",
+    "lastUpdated": "2026-10-15T07:52:48.733Z"
+  },
+  "ups": {
+    "carrier": "UPS Worldwide Express / Saver",
+    "url": "https://www.ups.com/ae/en/support/shipping-support/shipping-costs-rates/fuel-surcharges",
+    "ratePercent": 16,
+    "source": "UPS UAE Shipping Costs and Surcharges Portal",
+    "indexBasis": "US Gulf Coast (USGC) Kerosene-Type Jet Fuel Index (US EIA)",
+    "frequency": "Monthly / First Monday of the Month",
+    "status": "Verified & Synchronized",
+    "history": [
+      {
+        "effectiveDate": "2026-10-01",
+        "ratePercent": 16,
+        "note": "Current effective monthly index for UAE international express shipments"
+      }
+    ],
+    "lastSynced": "2026-10-15T07:52:48.246Z"
+  }
+}

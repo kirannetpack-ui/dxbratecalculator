@@ -85,6 +85,47 @@
       </div>
     </div>
 
+    <!-- Official Dubai Carrier Fuel Surcharges Live Ticker Bar -->
+    <div class="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 border border-amber-800/40">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/20 backdrop-blur border border-amber-400/30 flex items-center justify-center font-bold text-amber-300 text-base">
+          ⛽
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-extrabold text-amber-300">Official Dubai Fuel Surcharges</span>
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-[11px] text-slate-300">Live Sourced from Official Portals</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 text-xs mt-0.5">
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-slate-300">Aramex UAE:</span>
+              <span id="topAramexFuel" class="text-emerald-400 font-bold font-mono text-sm">14.5%</span>
+              <a href="https://www.aramex.com/us/en/services-solutions/fuel-surcharge" target="_blank" rel="noopener noreferrer" class="text-[10px] text-slate-400 hover:text-white underline">Official Page ↗</a>
+            </div>
+            <span class="text-slate-600">|</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-slate-300">UPS UAE:</span>
+              <span id="topUpsFuel" class="text-amber-400 font-bold font-mono text-sm">16.0%</span>
+              <a href="https://www.ups.com/ae/en/support/shipping-support/shipping-costs-rates/fuel-surcharges" target="_blank" rel="noopener noreferrer" class="text-[10px] text-slate-400 hover:text-white underline">Official Page ↗</a>
+            </div>
+            <span class="text-slate-600">|</span>
+            <span class="text-[11px] text-slate-400" id="fuelSyncStatusText">Auto-Synced (Every 12h)</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="switchTab('fuel-surcharges')" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-white/20">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          Surcharge Manager
+        </button>
+        <button onclick="syncFuelSurchargesLive()" id="btnSyncFuelTop" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Sync Carrier Pages
+        </button>
+      </div>
+    </div>
+
     <!-- Header Navigation & Transshipment Path -->
     <header class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -151,6 +192,10 @@
       <button onclick="switchTab('ktm-dxb')" id="tab-btn-ktm-dxb" class="px-5 py-3 text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
         Airline Tariffs in NPR (+100/300/500/1000kg)
+      </button>
+      <button onclick="switchTab('fuel-surcharges')" id="tab-btn-fuel-surcharges" class="px-5 py-3 text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Fuel Surcharges (UPS & Aramex UAE)
       </button>
     </nav>
 
@@ -345,15 +390,35 @@
 
           <!-- Section 3: Dubai Office Surcharges Configuration -->
           <div class="border-t border-slate-100 pt-4 space-y-2 text-xs">
-            <span class="font-bold text-slate-800 block text-[11px] uppercase tracking-wider">Dubai Office Surcharges (Contractual)</span>
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800 block text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Dubai Office Fuel Surcharges (Live Sourced)
+              </span>
+              <a href="javascript:void(0)" onclick="switchTab('fuel-surcharges')" class="text-[11px] text-blue-600 hover:underline font-semibold">View Surcharge Portals ↗</a>
+            </div>
             <div class="grid grid-cols-2 gap-2 text-slate-600 text-[11px]">
-              <div class="p-2 bg-slate-50 border border-slate-200 rounded">
-                <span class="font-semibold block text-slate-800">Aramex Fuel Surcharge:</span>
-                <span class="font-mono font-bold text-blue-700">14.5%</span> (Dubai Index)
+              <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-slate-800">Aramex Fuel:</span>
+                  <a href="https://www.aramex.com/us/en/services-solutions/fuel-surcharge" target="_blank" rel="noopener noreferrer" class="text-[10px] text-blue-600 underline">Official Page ↗</a>
+                </div>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="calcFuelAramex" value="14.5" step="0.1" oninput="calculateLive()" class="w-16 p-1 text-center font-mono font-bold text-blue-700 border border-slate-300 rounded bg-white text-xs">
+                  <span class="font-bold text-slate-500">%</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Dubai Index</span>
+                </div>
               </div>
-              <div class="p-2 bg-slate-50 border border-slate-200 rounded">
-                <span class="font-semibold block text-slate-800">UPS Fuel Surcharge:</span>
-                <span class="font-mono font-bold text-amber-700">16.0%</span> (Dubai Index)
+              <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-slate-800">UPS Fuel:</span>
+                  <a href="https://www.ups.com/ae/en/support/shipping-support/shipping-costs-rates/fuel-surcharges" target="_blank" rel="noopener noreferrer" class="text-[10px] text-amber-700 underline">Official Page ↗</a>
+                </div>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="calcFuelUps" value="16.0" step="0.1" oninput="calculateLive()" class="w-16 p-1 text-center font-mono font-bold text-amber-700 border border-slate-300 rounded bg-white text-xs">
+                  <span class="font-bold text-slate-500">%</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">US EIA Index</span>
+                </div>
               </div>
             </div>
             <div class="text-[10px] text-slate-400 italic">
@@ -798,6 +863,224 @@
       </div>
     </div>
 
+    <!-- TAB 6: OFFICIAL DUBAI CARRIER FUEL SURCHARGES -->
+    <div id="tab-fuel-surcharges" class="space-y-6 hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        
+        <!-- Header & Sync Actions -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
+              <h3 class="font-bold text-slate-900 text-lg">Official Dubai Carrier Fuel Surcharges (Live Sourced)</h3>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+              Automatically sourced directly from the official United Arab Emirates portals of <strong>Aramex</strong> and <strong>UPS</strong>. Constantly monitored and updated.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="syncFuelSurchargesLive()" id="btnSyncFuelPage" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>Sync with Carrier Portals Now</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sync Notification Banner -->
+        <div id="fuelSyncNotification" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center justify-between">
+          <span id="fuelSyncNotificationText">Synchronized successfully with official carrier portals.</span>
+          <span class="text-[10px] text-emerald-700 font-mono font-bold" id="fuelSyncTimestamp"></span>
+        </div>
+
+        <!-- Carrier Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- Aramex Surcharge Card -->
+          <div class="border-2 border-red-200 bg-red-50/20 rounded-2xl p-5 space-y-4 shadow-2xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-red-600 text-white font-black text-sm flex items-center justify-center">
+                  AR
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-sm">Aramex Express (UAE / GCC)</h4>
+                  <span class="text-[11px] text-slate-500">Dedicated GCC Network Fuel Surcharge</span>
+                </div>
+              </div>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold" id="aramexStatusBadge">Active Sourced</span>
+            </div>
+
+            <!-- Active Percentage Banner -->
+            <div class="p-4 bg-white border border-red-200 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Effective Surcharge</span>
+                <span class="text-3xl font-black text-red-700 font-mono" id="aramexActiveRateDisplay">14.50%</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400 block">Index Basis:</span>
+                <span class="text-xs font-bold text-slate-700">USGC Jet Fuel & UAE Committee</span>
+              </div>
+            </div>
+
+            <div class="space-y-2 text-xs text-slate-600">
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">Official Portal:</span>
+                <a href="https://www.aramex.com/us/en/services-solutions/fuel-surcharge" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 hover:underline flex items-center gap-1 font-semibold">
+                  aramex.com/fuel-surcharge ↗
+                </a>
+              </div>
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">UAE Portal:</span>
+                <a href="https://www.aramex.com/ae/en/services-solutions/fuel-surcharge" target="_blank" rel="noopener noreferrer" class="font-mono text-blue-600 hover:underline flex items-center gap-1 font-semibold">
+                  aramex.com/ae/fuel-surcharge ↗
+                </a>
+              </div>
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">Frequency & Lag:</span>
+                <span class="font-medium text-slate-800">Monthly / 2-month data lag</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Last Verified:</span>
+                <span class="font-mono text-slate-800" id="aramexLastCheckedDisplay">October 2026</span>
+              </div>
+            </div>
+
+            <!-- Aramex History Table -->
+            <div class="pt-2">
+              <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1">Index & Circular History</span>
+              <div class="max-h-32 overflow-y-auto custom-scrollbar border border-slate-200 rounded-lg">
+                <table class="w-full text-[11px] text-left">
+                  <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                    <tr>
+                      <th class="p-1.5">Effective</th>
+                      <th class="p-1.5 text-center">Rate</th>
+                      <th class="p-1.5">Note</th>
+                    </tr>
+                  </thead>
+                  <tbody id="aramexHistoryTableBody" class="divide-y divide-slate-100 font-mono text-slate-700"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- UPS Surcharge Card -->
+          <div class="border-2 border-amber-200 bg-amber-50/20 rounded-2xl p-5 space-y-4 shadow-2xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-900 text-amber-400 font-black text-sm flex items-center justify-center">
+                  UPS
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-sm">UPS Worldwide Express (UAE)</h4>
+                  <span class="text-[11px] text-slate-500">International Express Fuel Surcharge</span>
+                </div>
+              </div>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold" id="upsStatusBadge">Active Sourced</span>
+            </div>
+
+            <!-- Active Percentage Banner -->
+            <div class="p-4 bg-white border border-amber-200 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="text-xs text-slate-500 font-semibold uppercase tracking-wider block">Effective Surcharge</span>
+                <span class="text-3xl font-black text-amber-800 font-mono" id="upsActiveRateDisplay">16.00%</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400 block">Index Basis:</span>
+                <span class="text-xs font-bold text-slate-700">US EIA Kerosene-Type Jet Fuel</span>
+              </div>
+            </div>
+
+            <div class="space-y-2 text-xs text-slate-600">
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">Official Portal:</span>
+                <a href="https://www.ups.com/ae/en/support/shipping-support/shipping-costs-rates/fuel-surcharges" target="_blank" rel="noopener noreferrer" class="font-mono text-amber-700 hover:underline flex items-center gap-1 font-semibold">
+                  ups.com/ae/fuel-surcharges ↗
+                </a>
+              </div>
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">UAE Surcharges Portal:</span>
+                <a href="https://www.ups.com/ae/en/shipping/costs-rates/surcharges.page" target="_blank" rel="noopener noreferrer" class="font-mono text-amber-700 hover:underline flex items-center gap-1 font-semibold">
+                  ups.com/ae/surcharges ↗
+                </a>
+              </div>
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span class="text-slate-500">Frequency & Timing:</span>
+                <span class="font-medium text-slate-800">Monthly / 1st Monday of Month</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Last Verified:</span>
+                <span class="font-mono text-slate-800" id="upsLastCheckedDisplay">October 2026</span>
+              </div>
+            </div>
+
+            <!-- UPS History Table -->
+            <div class="pt-2">
+              <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block mb-1">Index & Circular History</span>
+              <div class="max-h-32 overflow-y-auto custom-scrollbar border border-slate-200 rounded-lg">
+                <table class="w-full text-[11px] text-left">
+                  <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                    <tr>
+                      <th class="p-1.5">Effective</th>
+                      <th class="p-1.5 text-center">Rate</th>
+                      <th class="p-1.5">Note</th>
+                    </tr>
+                  </thead>
+                  <tbody id="upsHistoryTableBody" class="divide-y divide-slate-100 font-mono text-slate-700"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Manual Dubai Office Circular Adjustment Box -->
+        <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <h4 class="font-bold text-slate-900 text-sm">Dubai Country Office Circular Adjustment & Immediate Override</h4>
+          </div>
+          <p class="text-xs text-slate-500">
+            If the Dubai head office of Aramex or UPS publishes an advance circular or immediate tariff advisory, you can record and apply it instantly across all landed cost calculations.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Select Carrier</label>
+              <select id="editFuelCarrier" class="w-full text-xs rounded-lg border border-slate-300 p-2 bg-white font-medium">
+                <option value="aramex">Aramex Express (GCC)</option>
+                <option value="ups">UPS Worldwide Express</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">New Surcharge Rate (%)</label>
+              <div class="relative">
+                <input type="number" id="editFuelRate" step="0.1" value="14.5" class="w-full text-xs font-mono font-bold rounded-lg border border-slate-300 p-2 pr-8 bg-white">
+                <span class="absolute right-2.5 top-2 text-xs text-slate-400 font-bold">%</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Effective Date</label>
+              <input type="date" id="editFuelDate" class="w-full text-xs rounded-lg border border-slate-300 p-2 bg-white font-mono">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Circular / Advisory Note</label>
+              <input type="text" id="editFuelNote" placeholder="e.g. Dubai Office Circular DXB-2026-10" class="w-full text-xs rounded-lg border border-slate-300 p-2 bg-white">
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="saveManualFuelAdjustment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Apply & Update Rate Engine
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -816,24 +1099,30 @@
     let currentAuditTrail = [];
     let currentActiveDropdownIndex = -1;
     let currentFilteredCountries = [];
+    let fuelSurchargesData = null;
 
     // Switch Main Tabs
     function switchTab(tabId) {
-      ['calculator', 'zones', 'audit-trail', 'upload', 'ktm-dxb'].forEach(id => {
+      ['calculator', 'zones', 'audit-trail', 'upload', 'ktm-dxb', 'fuel-surcharges'].forEach(id => {
         const el = document.getElementById('tab-' + id);
         const btn = document.getElementById('tab-btn-' + id);
-        if (id === tabId) {
-          el.classList.remove('hidden');
-          btn.classList.add('tab-active');
-          btn.classList.remove('text-slate-600');
-        } else {
-          el.classList.add('hidden');
-          btn.classList.remove('tab-active');
-          btn.classList.add('text-slate-600');
+        if (el && btn) {
+          if (id === tabId) {
+            el.classList.remove('hidden');
+            btn.classList.add('tab-active');
+            btn.classList.remove('text-slate-600');
+          } else {
+            el.classList.add('hidden');
+            btn.classList.remove('tab-active');
+            btn.classList.add('text-slate-600');
+          }
         }
       });
       if (tabId === 'audit-trail') {
         renderStepByStepAudit(currentAuditTrail);
+      }
+      if (tabId === 'fuel-surcharges') {
+        loadFuelSurcharges();
       }
     }
 
@@ -923,10 +1212,157 @@
           document.getElementById('dubaiAgencyClearanceAED').value = setRes.ratePerKgAED.toFixed(2);
         }
 
+        // Fetch Live Sourced Fuel Surcharges (Aramex & UPS)
+        await loadFuelSurcharges();
+
         updateTicker();
         calculateLive();
       } catch (err) {
         console.error("Init Error:", err);
+      }
+    }
+
+    // --- FUEL SURCHARGES SERVICE CLIENT ---
+    async function loadFuelSurcharges() {
+      try {
+        const res = await fetch('/api/fuel-surcharges');
+        const data = await res.json();
+        fuelSurchargesData = data;
+        renderFuelSurchargesUI(data);
+      } catch (err) {
+        console.error("Failed to load fuel surcharges:", err);
+      }
+    }
+
+    function renderFuelSurchargesUI(data) {
+      if (!data) return;
+      const aramex = data.aramex || {};
+      const ups = data.ups || {};
+
+      // 1. Top Ticker Bar
+      const topAramex = document.getElementById('topAramexFuel');
+      const topUps = document.getElementById('topUpsFuel');
+      if (topAramex) topAramex.textContent = `${aramex.ratePercent.toFixed(1)}%`;
+      if (topUps) topUps.textContent = `${ups.ratePercent.toFixed(1)}%`;
+      if (data.lastUpdated) {
+        const d = new Date(data.lastUpdated);
+        const statusEl = document.getElementById('fuelSyncStatusText');
+        if (statusEl) statusEl.textContent = `Verified: ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
+
+      // 2. Calculator Tab Inputs
+      const calcAramexEl = document.getElementById('calcFuelAramex');
+      const calcUpsEl = document.getElementById('calcFuelUps');
+      if (calcAramexEl && !calcAramexEl.matches(':focus')) calcAramexEl.value = aramex.ratePercent;
+      if (calcUpsEl && !calcUpsEl.matches(':focus')) calcUpsEl.value = ups.ratePercent;
+
+      // 3. Tab 6 Display
+      const aramexActiveDisplay = document.getElementById('aramexActiveRateDisplay');
+      const upsActiveDisplay = document.getElementById('upsActiveRateDisplay');
+      const aramexBadge = document.getElementById('aramexStatusBadge');
+      const upsBadge = document.getElementById('upsStatusBadge');
+
+      if (aramexActiveDisplay) aramexActiveDisplay.textContent = `${aramex.ratePercent.toFixed(2)}%`;
+      if (upsActiveDisplay) upsActiveDisplay.textContent = `${ups.ratePercent.toFixed(2)}%`;
+      if (aramexBadge) aramexBadge.textContent = aramex.status || 'Active Sourced';
+      if (upsBadge) upsBadge.textContent = ups.status || 'Active Sourced';
+
+      if (aramex.lastSynced) {
+        const el = document.getElementById('aramexLastCheckedDisplay');
+        if (el) el.textContent = new Date(aramex.lastSynced).toLocaleString();
+      }
+      if (ups.lastSynced) {
+        const el = document.getElementById('upsLastCheckedDisplay');
+        if (el) el.textContent = new Date(ups.lastSynced).toLocaleString();
+      }
+
+      // 4. History Tables
+      renderHistoryTable('aramexHistoryTableBody', aramex.history || []);
+      renderHistoryTable('upsHistoryTableBody', ups.history || []);
+    }
+
+    function renderHistoryTable(tbodyId, history) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (history.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-2 text-center text-slate-400">No historical circulars recorded yet.</td></tr>`;
+        return;
+      }
+      history.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-1.5 font-bold text-slate-800">${item.effectiveDate}</td>
+          <td class="p-1.5 text-center font-bold text-blue-700">${item.ratePercent.toFixed(1)}%</td>
+          <td class="p-1.5 text-slate-600 truncate max-w-[150px]">${item.note || 'Official Index update'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function syncFuelSurchargesLive() {
+      const btn1 = document.getElementById('btnSyncFuelTop');
+      const btn2 = document.getElementById('btnSyncFuelPage');
+      const origText1 = btn1 ? btn1.innerHTML : '';
+      const origText2 = btn2 ? btn2.innerHTML : '';
+
+      if (btn1) btn1.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Syncing...`;
+      if (btn2) btn2.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Syncing Portals...`;
+
+      try {
+        const res = await fetch('/api/fuel-surcharges/sync', { method: 'POST' });
+        const json = await res.json();
+        if (json.success && json.data) {
+          fuelSurchargesData = json.data;
+          renderFuelSurchargesUI(json.data);
+
+          const banner = document.getElementById('fuelSyncNotification');
+          const bannerText = document.getElementById('fuelSyncNotificationText');
+          const bannerTime = document.getElementById('fuelSyncTimestamp');
+          if (banner) {
+            banner.classList.remove('hidden');
+            bannerText.textContent = `Carrier Pages Synchronized: Aramex (${json.data.aramex.ratePercent}%) | UPS (${json.data.ups.ratePercent}%)`;
+            bannerTime.textContent = new Date().toLocaleTimeString();
+            setTimeout(() => banner.classList.add('hidden'), 6000);
+          }
+
+          calculateLive();
+        }
+      } catch (err) {
+        alert("Sync connection issue: " + err.message);
+      } finally {
+        if (btn1) btn1.innerHTML = origText1;
+        if (btn2) btn2.innerHTML = origText2;
+      }
+    }
+
+    async function saveManualFuelAdjustment() {
+      const carrier = document.getElementById('editFuelCarrier').value;
+      const ratePercent = parseFloat(document.getElementById('editFuelRate').value);
+      const effectiveDate = document.getElementById('editFuelDate').value || new Date().toISOString().split('T')[0];
+      const note = document.getElementById('editFuelNote').value;
+
+      if (isNaN(ratePercent) || ratePercent < 0) {
+        alert("Please enter a valid fuel surcharge percentage.");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/fuel-surcharges/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ carrier, ratePercent, effectiveDate, note })
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert(`Fuel Surcharge for ${carrier.toUpperCase()} updated to ${ratePercent}% successfully!`);
+          await loadFuelSurcharges();
+          calculateLive();
+        } else {
+          alert("Error: " + json.error);
+        }
+      } catch (err) {
+        alert("Update failed: " + err.message);
       }
     }
 
@@ -1258,6 +1694,12 @@
       const airlineId = airlineCarrierEl ? airlineCarrierEl.value : 'flydubai';
       const slab = document.getElementById('airlineSlab') ? document.getElementById('airlineSlab').value : '300';
       const dubaiAgencyClearanceAED = parseFloat(document.getElementById('dubaiAgencyClearanceAED').value) || 1.00;
+      const fuelSurchargeAramexPct = document.getElementById('calcFuelAramex') 
+        ? parseFloat(document.getElementById('calcFuelAramex').value) 
+        : undefined;
+      const fuelSurchargeUpsPct = document.getElementById('calcFuelUps') 
+        ? parseFloat(document.getElementById('calcFuelUps').value) 
+        : undefined;
 
       const volWeight = (dimL * dimW * dimH) / 5000;
       const chargeableWeight = Math.max(actualWeight, volWeight);
@@ -1277,7 +1719,9 @@
             airlineId,
             slab,
             rateType: activeRateType,
-            dubaiAgencyClearanceAED: dubaiAgencyClearanceAED
+            dubaiAgencyClearanceAED: dubaiAgencyClearanceAED,
+            fuelSurchargeAramexPct: fuelSurchargeAramexPct,
+            fuelSurchargeUpsPct: fuelSurchargeUpsPct
           })
         });
         const data = await res.json();

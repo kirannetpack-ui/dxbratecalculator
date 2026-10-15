@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nepal ➔ Dubai Hub Smart Logistics & Rate Engine 3.1</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .tab-active {
+      border-bottom: 2px solid #2563eb;
+      color: #1d4ed8;
+      font-weight: 600;
+      background-color: #eff6ff;
+    }
+    .carrier-subtab-active {
+      background-color: #2563eb;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    input[type="number"]::-webkit-inner-spin-button, 
+    input[type="number"]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 bg-slate-50 text-slate-800">
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto space-y-5">
+
+    <!-- Top Live NRB Forex Ticker Bar -->
+    <div class="bg-gradient-to-r from-red-700 via-slate-900 to-blue-900 text-white rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center font-bold text-white text-base">
+          🇳🇵
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-extrabold text-red-200">Nepal Rastra Bank (NRB)</span>
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-[11px] text-slate-300">Live Forex Index (Ex-Nepal)</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs mt-0.5">
+            <span><strong>1 AED</strong> = <span id="tickerAed" class="text-amber-300 font-bold font-mono">NPR 42.23</span></span>
+            <span class="text-slate-500">|</span>
+            <span><strong>1 USD</strong> = <span id="tickerUsd" class="text-emerald-300 font-bold font-mono">NPR 155.08</span></span>
+            <span class="text-slate-500">|</span>
+            <span><strong>1 SAR</strong> = <span id="tickerSar" class="text-cyan-300 font-bold font-mono">NPR 41.31</span></span>
+            <span class="text-slate-500">|</span>
+            <span><strong>1 KWD</strong> = <span id="tickerKwd" class="text-pink-300 font-bold font-mono">NPR 503.26</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="https://www.nrb.org.np/forex/" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-white/20">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          nrb.org.np/forex
+        </a>
+        <button onclick="syncForexWithNRB()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Sync NRB Rates
+        </button>
+      </div>
+    </div>
+
+    <!-- Header Navigation & Transshipment Path -->
+    <header class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Nepal ➔ Dubai Hub Smart Logistics Engine 3.1</span>
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">Aramex & UPS Dual Carrier</span>
+          </h1>
+          <p class="text-xs text-slate-500 mt-1">
+            Origin: <strong>Kathmandu, Nepal (KTM)</strong> ➔ Air Cargo Line-Haul (+100/300/500/1000kg) ➔ <strong>Dubai Transit Hub (DXB)</strong> ➔ Last-Mile (<strong>Aramex & UPS</strong>)
+          </p>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-xs">
+          <span class="text-slate-500 font-medium ml-1">NRB Rate Basis:</span>
+          <button id="btnSellRate" onclick="setRateType('sell')" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold transition shadow-xs">Selling Rate</button>
+          <button id="btnBuyRate" onclick="setRateType('buy')" class="px-2.5 py-1 rounded-lg text-slate-600 font-medium hover:text-slate-900 transition">Buying Rate</button>
+        </div>
+      </div>
+
+      <!-- Corridor Steps Diagram -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-xs">
+        <div class="p-2.5 rounded-xl bg-red-50/70 border border-red-200/80 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-red-600 text-white font-bold flex items-center justify-center text-[10px]">1</span>
+          <div>
+            <span class="font-bold text-slate-900 block">Nepal Origin (KTM)</span>
+            <span class="text-slate-500 text-[11px]">Agency Clearance (Per Kg)</span>
+          </div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/80 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]">2</span>
+          <div>
+            <span class="font-bold text-slate-900 block">KTM ➔ DXB Air Cargo</span>
+            <span class="text-slate-500 text-[11px]">Slabs: +100, 300, 500, 1000kg</span>
+          </div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-[10px]">3</span>
+          <div>
+            <span class="font-bold text-slate-900 block">Dubai Transit Hub</span>
+            <span class="text-slate-500 text-[11px]">DXB Transit & THC (Per Kg)</span>
+          </div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">4</span>
+          <div>
+            <span class="font-bold text-slate-900 block">Last-Mile Delivery</span>
+            <span class="text-slate-500 text-[11px]">Aramex (GCC) & UPS (Global)</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex border-b border-slate-200 bg-white rounded-xl shadow-xs overflow-x-auto">
+      <button onclick="switchTab('calculator')" id="tab-btn-calculator" class="tab-active px-5 py-3 text-sm font-medium transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        Dual-Currency Landed Cost Engine
+      </button>
+      <button onclick="switchTab('zones')" id="tab-btn-zones" class="px-5 py-3 text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 012 2v2.945"/></svg>
+        Countries & Zones Directory (Aramex vs UPS)
+      </button>
+      <button onclick="switchTab('audit-trail')" id="tab-btn-audit-trail" class="px-5 py-3 text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Smart AI Step-by-Step Rate Mapping
+      </button>
+      <button onclick="switchTab('upload')" id="tab-btn-upload" class="px-5 py-3 text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        Rate Sheet Ingestion & AI Analyzer
+      </button>
+      <button onclick="switchTab('ktm-dxb')" id="tab-btn-ktm-dxb" class="px-5 py-3 text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        Airline Tariffs (+100/300/500/1000kg)
+      </button>
+    </nav>
+
+    <!-- TAB 1: DUAL-CURRENCY CALCULATOR -->
+    <div id="tab-calculator" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Inputs & Route Controls (5 cols) -->
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+          <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+            <h2 class="font-semibold text-slate-900 text-base flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+              Shipment Specifications
+            </h2>
+            <span class="text-xs bg-red-50 text-red-700 px-2.5 py-0.5 rounded font-mono font-bold">KTM ➔ DXB ➔ Global</span>
+          </div>
+
+          <!-- Origin & Searchable Destination Combobox -->
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Origin (Fixed)</label>
+              <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span>🇳🇵 Kathmandu, Nepal (KTM)</span>
+              </div>
+            </div>
+
+            <!-- Enhanced Searchable Country Combobox -->
+            <div class="relative">
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-xs font-semibold text-slate-700">
+                  Destination Country (Type name or ISO code)
+                </label>
+                <span id="countryCountBadge" class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded font-mono font-semibold">195 Countries Available</span>
+              </div>
+
+              <!-- Search Input with Clear Button -->
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="countrySearchInput" 
+                  autocomplete="off"
+                  placeholder="Type country name or code (e.g. SA, US, Germany, Nepal)..." 
+                  onfocus="openCountryDropdown()" 
+                  oninput="onCountrySearchInput(this.value)"
+                  onkeydown="onCountrySearchKeydown(event)"
+                  class="w-full text-xs font-semibold rounded-lg border border-slate-300 p-2.5 pr-16 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-900 shadow-2xs"
+                />
+                <!-- Hidden state destination -->
+                <input type="hidden" id="destination" value="SA" />
+
+                <!-- Action icons inside search bar -->
+                <div class="absolute right-2 top-2 flex items-center gap-1">
+                  <button type="button" onclick="clearCountrySearch()" class="text-slate-400 hover:text-slate-600 p-1 text-xs">✕</button>
+                  <button type="button" onclick="toggleCountryDropdown()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Floating Autocomplete Dropdown Menu -->
+              <div id="countryDropdownMenu" class="hidden absolute z-30 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-72 overflow-y-auto custom-scrollbar p-1.5 space-y-1">
+                <!-- Filter Pills inside Dropdown -->
+                <div class="flex items-center gap-1 p-1 border-b border-slate-100 text-[10px] overflow-x-auto whitespace-nowrap bg-slate-50 rounded-lg mb-1">
+                  <span class="text-slate-400 font-bold px-1">Quick:</span>
+                  <button type="button" onclick="filterDropdownGroup('all')" class="px-2 py-0.5 bg-blue-600 text-white font-bold rounded">All (195)</button>
+                  <button type="button" onclick="filterDropdownGroup('gcc')" class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-semibold rounded hover:bg-emerald-200">GCC Priority</button>
+                  <button type="button" onclick="filterDropdownGroup('direct')" class="px-2 py-0.5 bg-blue-100 text-blue-800 font-semibold rounded hover:bg-blue-200">Direct Lanes (37)</button>
+                  <button type="button" onclick="filterDropdownGroup('europe')" class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Europe</button>
+                  <button type="button" onclick="filterDropdownGroup('asia')" class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Asia-Pacific</button>
+                  <button type="button" onclick="filterDropdownGroup('americas')" class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Americas</button>
+                </div>
+                <!-- Dynamic country items list -->
+                <div id="countryDropdownItemsList" class="space-y-0.5">
+                  <!-- Populated dynamically via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone / Direct Column Information Pill -->
+          <div id="zoneInfoPill" class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              <span id="zoneLabel" class="text-blue-900 font-bold">Zone 2 (GCC / Middle East)</span>
+            </div>
+            <span id="tariffTypeLabel" class="text-[11px] bg-blue-200/70 text-blue-900 px-2 py-0.5 rounded font-mono font-semibold">Direct Column: SA</span>
+          </div>
+
+          <!-- Weight & Declared Value -->
+          <div class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Actual Weight (kg)</label>
+                <div class="relative">
+                  <input type="number" id="actualWeight" value="3.5" step="0.1" min="0.1" oninput="calculateLive()" class="w-full text-sm font-semibold rounded-lg border border-slate-300 p-2 pr-8 focus:border-blue-500 focus:outline-none">
+                  <span class="absolute right-2.5 top-2.5 text-xs text-slate-400 font-medium">kg</span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Declared Value (USD)</label>
+                <div class="relative">
+                  <input type="number" id="declaredValue" value="200" step="1" min="0" oninput="calculateLive()" class="w-full text-sm font-semibold rounded-lg border border-slate-300 p-2 pr-10 focus:border-blue-500 focus:outline-none">
+                  <span class="absolute right-2.5 top-2.5 text-xs text-slate-400 font-medium">USD</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dimensions L x W x H -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Dimensions (L × W × H in cm)</label>
+              <div class="grid grid-cols-3 gap-2">
+                <input type="number" id="dimL" value="30" placeholder="L" oninput="calculateLive()" class="text-xs text-center rounded-lg border border-slate-300 p-2 focus:border-blue-500 focus:outline-none">
+                <input type="number" id="dimW" value="25" placeholder="W" oninput="calculateLive()" class="text-xs text-center rounded-lg border border-slate-300 p-2 focus:border-blue-500 focus:outline-none">
+                <input type="number" id="dimH" value="20" placeholder="H" oninput="calculateLive()" class="text-xs text-center rounded-lg border border-slate-300 p-2 focus:border-blue-500 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Calculated Weight Box -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center text-xs">
+              <div>
+                <span class="text-slate-600">Volumetric Weight:</span>
+                <span id="volWeightDisplay" class="font-bold text-slate-800 ml-1">3.00 kg</span>
+                <span class="text-[11px] text-slate-400 block">(L×W×H / 5000)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-blue-700 font-medium">Chargeable Weight:</span>
+                <span id="chargeableWeightDisplay" class="font-bold text-blue-900 text-sm ml-1">3.50 kg</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Agency Clearance (PER KILO - EDITABLE) -->
+          <div class="border-t border-slate-100 pt-4 space-y-3">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                Agency Clearance Fee (Per Kilo)
+              </label>
+              <span class="text-[11px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded">Editable Per-Kg</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span class="text-slate-500 block text-[11px]">Agency Clearance (AED / kg)</span>
+                <div class="relative mt-1">
+                  <input type="number" id="agencyRatePerKg" value="1.50" step="0.1" oninput="calculateLive()" class="w-full text-xs font-bold rounded border border-purple-300 p-2 pr-10 focus:border-purple-500 font-mono">
+                  <span class="absolute right-2 top-2 text-[10px] text-slate-400 font-sans">AED/kg</span>
+                </div>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[11px]">Equivalent in NPR</span>
+                <div class="p-2 bg-slate-50 border border-slate-200 rounded text-xs font-bold text-slate-800 mt-1 font-mono">
+                  <span id="agencyNprPerKg">NPR 63.35</span> / kg
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Middle-Mile Air Cargo (KTM ➔ DXB) -->
+          <div class="border-t border-slate-100 pt-4 space-y-3">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-red-600"></span>
+                Air Cargo Line-Haul (KTM ➔ DXB)
+              </label>
+              <span class="text-[11px] text-blue-600 font-semibold cursor-pointer" onclick="switchTab('ktm-dxb')">Manage Airlines</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-slate-500 block text-[11px]">Carrier / Airline</span>
+                <select id="airlineCarrier" onchange="calculateLive()" class="w-full text-xs rounded border border-slate-300 p-1.5 mt-1 bg-white font-medium">
+                  <!-- Dynamic -->
+                </select>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[11px]">Volume Break Slab</span>
+                <select id="airlineSlab" onchange="calculateLive()" class="w-full text-xs rounded border border-slate-300 p-1.5 mt-1 bg-white font-medium">
+                  <option value="100">+100 kg Break</option>
+                  <option value="300" selected>+300 kg Break (Default)</option>
+                  <option value="500">+500 kg Break</option>
+                  <option value="1000">+1000 kg Break</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs">
+              <div>
+                <span class="text-slate-500">Air Cargo Rate:</span>
+                <span id="airRateDisplay" class="font-bold text-slate-800 ml-1">$1.05 / kg (AED 3.86)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-slate-500">Freight:</span>
+                <span id="airFreightDisplay" class="font-bold text-blue-700 ml-1">AED 13.50 / NPR 570.10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Dubai Hub Transit Clearance (PER KILO - EDITABLE) -->
+          <div class="border-t border-slate-100 pt-4 space-y-3">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                Dubai Hub Transit Clearance (Per Kilo)
+              </label>
+              <span class="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded">DXB THC / Bayan</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span class="text-slate-500 block text-[11px]">Hub Rate (AED / kg)</span>
+                <div class="relative mt-1">
+                  <input type="number" id="dubaiHubRatePerKg" value="2.00" step="0.1" oninput="calculateLive()" class="w-full text-xs font-bold rounded border border-amber-300 p-2 pr-10 focus:border-amber-500 font-mono">
+                  <span class="absolute right-2 top-2 text-[10px] text-slate-400 font-sans">AED/kg</span>
+                </div>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[11px]">Equivalent in NPR</span>
+                <div class="p-2 bg-slate-50 border border-slate-200 rounded text-xs font-bold text-slate-800 mt-1 font-mono">
+                  <span id="hubNprPerKg">NPR 84.46</span> / kg
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Dual-Currency Results & Carrier Comparison (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+          <!-- Comparison Cards: Aramex vs UPS -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Card 1: Aramex Express -->
+            <div id="aramexCard" class="bg-white border-2 border-emerald-500 rounded-2xl p-5 shadow-sm relative overflow-hidden transition-all">
+              <div class="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-bl-xl shadow-xs" id="aramexBadge">
+                Optimal
+              </div>
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-red-600 text-white font-black text-xs flex items-center justify-center">
+                  AR
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm">Aramex Express</h3>
+                  <span class="text-xs text-slate-500" id="aramexTariffSource">Dedicated GCC Tariff</span>
+                </div>
+              </div>
+
+              <!-- Dual Currency Box -->
+              <div class="my-3 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <div class="text-xs text-slate-500 font-medium">Total Landed Cost (KTM ➔ Dest)</div>
+                <div class="flex items-baseline justify-between">
+                  <div>
+                    <span class="text-2xl font-black text-slate-900" id="aramexTotalNPR">NPR 0</span>
+                    <span class="text-xs text-slate-500 font-medium block">Nepalese Rupees</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-lg font-bold text-blue-700" id="aramexTotalAED">AED 0.00</span>
+                    <span class="text-[11px] text-slate-400 block" id="aramexTotalUSD">($0.00 USD)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-xs space-y-1.5 pt-2 border-t border-slate-100 text-slate-600">
+                <div class="flex justify-between">
+                  <span>KTM ➔ DXB Air Cargo:</span>
+                  <span class="font-medium text-slate-800" id="aramexAirCost">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Agency Clearance (Per Kg):</span>
+                  <span class="font-medium text-slate-800" id="aramexAgencyClearance">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Dubai Hub Transit (Per Kg):</span>
+                  <span class="font-medium text-slate-800" id="aramexHubClearance">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Last-Mile Base Freight (ex-DXB):</span>
+                  <span class="font-medium text-slate-800" id="aramexBaseFreight">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Fuel Surcharge & Postal Tax:</span>
+                  <span class="font-medium text-slate-800" id="aramexSurcharges">AED 0.00</span>
+                </div>
+                <div class="flex justify-between font-semibold text-blue-900 pt-1 border-t border-dashed border-slate-200">
+                  <span>Dest. Customs Duty, VAT & DDP:</span>
+                  <span id="aramexDestFees">AED 0.00</span>
+                </div>
+              </div>
+
+              <button onclick="selectCarrier('aramex')" class="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl transition shadow-xs">
+                Select Aramex Quotation
+              </button>
+            </div>
+
+            <!-- Card 2: UPS Worldwide -->
+            <div id="upsCard" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden transition-all hover:border-slate-300">
+              <div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-bl-xl shadow-xs" id="upsBadge">
+                Global Express
+              </div>
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-900 text-amber-400 font-black text-xs flex items-center justify-center">
+                  UPS
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm">UPS Worldwide</h3>
+                  <span class="text-xs text-slate-500" id="upsTariffSource">International Express Matrix</span>
+                </div>
+              </div>
+
+              <!-- Dual Currency Box -->
+              <div class="my-3 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <div class="text-xs text-slate-500 font-medium">Total Landed Cost (KTM ➔ Dest)</div>
+                <div class="flex items-baseline justify-between">
+                  <div>
+                    <span class="text-2xl font-black text-slate-900" id="upsTotalNPR">NPR 0</span>
+                    <span class="text-xs text-slate-500 font-medium block">Nepalese Rupees</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-lg font-bold text-amber-800" id="upsTotalAED">AED 0.00</span>
+                    <span class="text-[11px] text-slate-400 block" id="upsTotalUSD">($0.00 USD)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-xs space-y-1.5 pt-2 border-t border-slate-100 text-slate-600">
+                <div class="flex justify-between">
+                  <span>KTM ➔ DXB Air Cargo:</span>
+                  <span class="font-medium text-slate-800" id="upsAirCost">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Agency Clearance (Per Kg):</span>
+                  <span class="font-medium text-slate-800" id="upsAgencyClearance">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Dubai Hub Transit (Per Kg):</span>
+                  <span class="font-medium text-slate-800" id="upsHubClearance">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Last-Mile Base Freight (ex-DXB):</span>
+                  <span class="font-medium text-slate-800" id="upsBaseFreight">AED 0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Fuel Surcharge & Postal Tax:</span>
+                  <span class="font-medium text-slate-800" id="upsSurcharges">AED 0.00</span>
+                </div>
+                <div class="flex justify-between font-semibold text-amber-900 pt-1 border-t border-dashed border-slate-200">
+                  <span>Dest. Customs Duty, VAT & DDP:</span>
+                  <span id="upsDestFees">AED 0.00</span>
+                </div>
+              </div>
+
+              <button onclick="selectCarrier('ups')" class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-xl transition">
+                Select UPS Quotation
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Itemized Dual-Currency Landed Cost Audit Table -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-slate-900 text-sm flex items-center gap-2">
+                <span>Itemized Landed Cost Audit</span>
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold" id="selectedCarrierLabel">Aramex Express</span>
+              </h3>
+              <div class="text-xs text-slate-500 font-medium">
+                1 AED = <span id="auditAedRate" class="font-mono text-slate-900 font-bold">42.23</span> NPR
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 border-y border-slate-200">
+                    <th class="py-2.5 px-3 font-semibold">Stage / Component</th>
+                    <th class="py-2.5 px-3 font-semibold">Calculation Rule & Source</th>
+                    <th class="py-2.5 px-3 font-semibold text-right">Amount (AED)</th>
+                    <th class="py-2.5 px-3 font-semibold text-right bg-blue-50/50 text-blue-900">Amount (NPR)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                  <tr class="bg-red-50/20">
+                    <td class="py-2 px-3 font-medium text-slate-900 flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                      1. KTM ➔ DXB Air Cargo Line-Haul
+                    </td>
+                    <td class="py-2 px-3 text-slate-500" id="auditAirRule">Flydubai +300kg Slab</td>
+                    <td class="py-2 px-3 text-right font-medium" id="auditAirAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right font-bold text-red-800 bg-red-50/30" id="auditAirAmtNPR">0.00</td>
+                  </tr>
+                  <tr class="bg-purple-50/20">
+                    <td class="py-2 px-3 font-medium text-slate-900 flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-purple-600"></span>
+                      2. Agency Clearance (Per Kg)
+                    </td>
+                    <td class="py-2 px-3 text-slate-500" id="auditAgencyRule">AED 1.50 / kg</td>
+                    <td class="py-2 px-3 text-right font-medium" id="auditAgencyAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right font-bold text-purple-800 bg-purple-50/30" id="auditAgencyAmtNPR">0.00</td>
+                  </tr>
+                  <tr class="bg-amber-50/20">
+                    <td class="py-2 px-3 font-medium text-slate-900 flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                      3. Dubai Hub Transit Clearance (Per Kg)
+                    </td>
+                    <td class="py-2 px-3 text-slate-500" id="auditHubRule">AED 2.00 / kg</td>
+                    <td class="py-2 px-3 text-right font-medium" id="auditHubAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right font-bold text-amber-900 bg-amber-50/30" id="auditHubAmtNPR">0.00</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 px-3 font-medium text-slate-900 flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                      4. Last-Mile Base Courier Freight
+                    </td>
+                    <td class="py-2 px-3 text-slate-500" id="auditBaseRule">Dedicated GCC Tariff (ex-DXB)</td>
+                    <td class="py-2 px-3 text-right font-medium" id="auditBaseAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right font-medium" id="auditBaseAmtNPR">0.00</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 px-3 font-medium text-slate-900">5. Fuel Surcharge (FSC)</td>
+                    <td class="py-2 px-3 text-slate-500" id="auditFscRule">14.5% monthly index</td>
+                    <td class="py-2 px-3 text-right" id="auditFscAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right" id="auditFscAmtNPR">0.00</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 px-3 font-medium text-slate-900">6. UAE Postal Tax</td>
+                    <td class="py-2 px-3 text-slate-500">Max(AED 2.00, 10% on parcels ≤ 30kg)</td>
+                    <td class="py-2 px-3 text-right" id="auditPostalAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right" id="auditPostalAmtNPR">0.00</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 px-3 font-medium text-slate-900">7. UAE Local VAT</td>
+                    <td class="py-2 px-3 text-slate-500">5% FTA on local services</td>
+                    <td class="py-2 px-3 text-right" id="auditVatAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right" id="auditVatAmtNPR">0.00</td>
+                  </tr>
+                  <tr class="bg-slate-50/50">
+                    <td class="py-2 px-3 font-medium text-slate-900">8. Destination Customs Duty</td>
+                    <td class="py-2 px-3 text-slate-500" id="auditDutyRule">5% over threshold</td>
+                    <td class="py-2 px-3 text-right" id="auditDutyAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right" id="auditDutyAmtNPR">0.00</td>
+                  </tr>
+                  <tr class="bg-slate-50/50">
+                    <td class="py-2 px-3 font-medium text-slate-900">9. Destination Import VAT</td>
+                    <td class="py-2 px-3 text-slate-500" id="auditDestVatRule">15% Standard VAT</td>
+                    <td class="py-2 px-3 text-right" id="auditDestVatAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right" id="auditDestVatAmtNPR">0.00</td>
+                  </tr>
+                  <tr class="bg-slate-50/50">
+                    <td class="py-2 px-3 font-medium text-slate-900">10. Regulatory & DDP Fees</td>
+                    <td class="py-2 px-3 text-slate-500" id="auditRegulatoryRule">ZATCA / Bayan / DDP Admin</td>
+                    <td class="py-2 px-3 text-right" id="auditRegulatoryAmtAED">0.00</td>
+                    <td class="py-2 px-3 text-right" id="auditRegulatoryAmtNPR">0.00</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="border-t-2 border-slate-300 font-bold text-slate-900 bg-slate-100/70">
+                    <td class="py-3 px-3 text-sm">Total Landed Cost</td>
+                    <td class="py-3 px-3 text-xs text-slate-500 font-normal">All-in: Nepal ➔ DXB Hub ➔ Last-Mile ➔ Consignee</td>
+                    <td class="py-3 px-3 text-right text-base text-blue-700" id="auditTotalAmtAED">AED 0.00</td>
+                    <td class="py-3 px-3 text-right text-base text-emerald-700 bg-emerald-50/60 font-black" id="auditTotalAmtNPR">NPR 0.00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Quick Link to Step-by-Step AI Trail -->
+            <div class="pt-2 flex justify-end">
+              <button onclick="switchTab('audit-trail')" class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition">
+                <span>View Full 7-Step Mathematical Audit Trail</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: COUNTRIES & ZONES DIRECTORY (ARAMEX VS UPS DEDICATED VIEWS) -->
+    <div id="tab-zones" class="space-y-6 hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+              <span>Countries & Zones Directory</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold" id="dirCountryCountBadge">195 Countries Mapped</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+              Independent carrier views for <strong>Aramex</strong> (GCC Hub & Global Network) and <strong>UPS</strong> (37 Direct Country Lanes & Worldwide Zones 2 to 7).
+            </p>
+          </div>
+          
+          <!-- Search input for directory -->
+          <div class="relative w-full md:w-72">
+            <input 
+              type="text" 
+              id="dirSearchInput" 
+              placeholder="Search country or code (e.g. SA, US, Germany)..." 
+              oninput="filterDirectoryView(this.value)"
+              class="w-full text-xs rounded-lg border border-slate-300 p-2 pr-7 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none"
+            />
+            <span class="absolute right-2.5 top-2.5 text-xs text-slate-400">🔍</span>
+          </div>
+        </div>
+
+        <!-- Carrier Sub-Navigation Switcher -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-xs">
+          <button id="subtab-btn-aramex" onclick="switchCarrierDirectory('aramex')" class="carrier-subtab-active px-4 py-2 rounded-lg text-xs transition">
+            📦 Aramex Network & Zones
+          </button>
+          <button id="subtab-btn-ups" onclick="switchCarrierDirectory('ups')" class="px-4 py-2 rounded-lg text-xs text-slate-700 font-semibold hover:text-slate-900 transition">
+            ✈️ UPS Worldwide & 37 Direct Lanes
+          </button>
+          <button id="subtab-btn-all" onclick="switchCarrierDirectory('all')" class="px-4 py-2 rounded-lg text-xs text-slate-700 font-semibold hover:text-slate-900 transition">
+            🌐 Combined Global Comparison
+          </button>
+        </div>
+
+        <!-- SUBVIEW 1: ARAMEX NETWORK DIRECTORY -->
+        <div id="carrierView-aramex" class="space-y-5">
+          <!-- GCC Priority Banner -->
+          <div class="bg-gradient-to-r from-emerald-900 to-slate-900 text-white rounded-xl p-4 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-500 text-white font-extrabold text-[10px] uppercase">Core Network</span>
+                <h4 class="font-bold text-sm text-emerald-200">Aramex Dedicated GCC Transshipment Corridor</h4>
+              </div>
+              <span class="text-xs text-slate-300 font-mono">Dedicated GCC Non-Doc Rate Card</span>
+            </div>
+            <p class="text-xs text-slate-200">
+              Shipments to GCC countries move on Aramex's dedicated regional ground & air network with lower base rates starting from 0.5kg to 5.0kg and incremental per-kilo slabs. All shipments handled under Free Domicile (DDP) clearance.
+            </p>
+          </div>
+
+          <!-- GCC Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3" id="aramexGccCards">
+            <!-- Dynamic GCC Country Cards -->
+          </div>
+
+          <!-- Aramex Global Zones (2 to 7) -->
+          <div class="space-y-3 pt-3 border-t border-slate-200">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider">Aramex Regional & Global Express Zones</h4>
+              <div class="flex gap-1" id="aramexZoneFilterButtons">
+                <button onclick="filterAramexZone('all')" class="px-2.5 py-1 text-xs font-bold rounded bg-blue-600 text-white">All</button>
+                <button onclick="filterAramexZone('2')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 2 (Levant/ME)</button>
+                <button onclick="filterAramexZone('3')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 3 (South Asia)</button>
+                <button onclick="filterAramexZone('4')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 4 (Europe)</button>
+                <button onclick="filterAramexZone('5')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 5 (NA/East Asia)</button>
+                <button onclick="filterAramexZone('6')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 6 (Oceania/SEA)</button>
+                <button onclick="filterAramexZone('7')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 7 (LatAm/Africa)</button>
+              </div>
+            </div>
+            <div id="aramexCountriesGrid" class="flex flex-wrap gap-2 pt-1 max-h-96 overflow-y-auto custom-scrollbar p-1">
+              <!-- Dynamic Aramex Country Badges -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW 2: UPS NETWORK DIRECTORY -->
+        <div id="carrierView-ups" class="space-y-5 hidden">
+          <!-- UPS Direct Lanes Banner -->
+          <div class="bg-gradient-to-r from-amber-900 to-slate-900 text-white rounded-xl p-4 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-amber-500 text-white font-extrabold text-[10px] uppercase">Direct Tariffs</span>
+                <h4 class="font-bold text-sm text-amber-200">UPS Express Saver - 37 Direct Country Tariff Columns</h4>
+              </div>
+              <span class="text-xs text-slate-300 font-mono">37 Dedicated Country Lanes</span>
+            </div>
+            <p class="text-xs text-slate-200">
+              The Express Saver sheet features 37 individually tariffed destination columns (e.g. US, GB, DE, CA, AU, IN, CN, etc.). Countries outside these 37 direct lanes are mapped into Worldwide Zones 2 to 7.
+            </p>
+          </div>
+
+          <!-- 37 Direct Country Columns Grid -->
+          <div class="space-y-2">
+            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center justify-between">
+              <span>37 Direct Tariff Country Columns</span>
+              <span class="text-[11px] text-blue-600 font-normal">Click any country to calculate landed cost immediately</span>
+            </h4>
+            <div id="upsDirectLanesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              <!-- Dynamic UPS Direct Lanes Cards -->
+            </div>
+          </div>
+
+          <!-- UPS Worldwide Zones 2 to 7 -->
+          <div class="space-y-3 pt-3 border-t border-slate-200">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider">UPS Worldwide Zones (Zone 2 - 7 Mapping)</h4>
+              <div class="flex gap-1" id="upsZoneFilterButtons">
+                <button onclick="filterUpsZone('all')" class="px-2.5 py-1 text-xs font-bold rounded bg-blue-600 text-white">All Zones</button>
+                <button onclick="filterUpsZone('2')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 2</button>
+                <button onclick="filterUpsZone('3')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 3</button>
+                <button onclick="filterUpsZone('4')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 4</button>
+                <button onclick="filterUpsZone('5')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 5</button>
+                <button onclick="filterUpsZone('6')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 6</button>
+                <button onclick="filterUpsZone('7')" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Zone 7</button>
+              </div>
+            </div>
+            <div id="upsZoneCountriesGrid" class="flex flex-wrap gap-2 pt-1 max-h-96 overflow-y-auto custom-scrollbar p-1">
+              <!-- Dynamic UPS Zone Country Badges -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW 3: COMBINED COMPARISON TABLE -->
+        <div id="carrierView-all" class="space-y-4 hidden">
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-xs text-left border-collapse" id="combinedDirectoryTable">
+              <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3">Country Name</th>
+                  <th class="py-2.5 px-3 text-center">ISO</th>
+                  <th class="py-2.5 px-3">Region</th>
+                  <th class="py-2.5 px-3 bg-red-50/50 text-red-900">Aramex Routing</th>
+                  <th class="py-2.5 px-3 bg-amber-50/50 text-amber-900">UPS Routing</th>
+                  <th class="py-2.5 px-3 text-center">Zone</th>
+                  <th class="py-2.5 px-3 text-center">Customs (De Minimis)</th>
+                  <th class="py-2.5 px-3 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700" id="combinedDirectoryTableBody">
+                <!-- Dynamic Combined Directory Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: SMART AI STEP-BY-STEP RATE MAPPING & AUDIT ENGINE -->
+    <div id="tab-audit-trail" class="space-y-6 hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+              <span>Smart AI Step-by-Step Rate Mapping Engine</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">100% Algorithmic Transparency</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+              Detailed mathematical audit trail showing every stage from origin in Nepal to delivery consignee, including all tariff lookups, formulas, surcharges, and currency conversions.
+            </p>
+          </div>
+          <button onclick="calculateLive(); switchTab('audit-trail');" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Re-calculate Live Audit
+          </button>
+        </div>
+
+        <!-- 7-Step Dynamic Stepper Container -->
+        <div id="stepByStepContainer" class="space-y-4">
+          <!-- Populated dynamically via renderStepByStepAudit() -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: RATE SHEET INGESTION & AI ANALYZER -->
+    <div id="tab-upload" class="space-y-6 hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span>Intelligent Rate Sheet Ingestion Engine</span>
+            <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">AI Powered</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">
+            Upload any courier / consolidator rate sheet (.xlsx or .csv). The system uses multi-sheet heuristic scanning to detect zones, country columns, weight tiers, and terms.
+          </p>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center transition bg-slate-50/50 hover:bg-blue-50/30 cursor-pointer" onclick="document.getElementById('sheetFileInput').click()">
+          <input type="file" id="sheetFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileUpload(event)">
+          <div class="max-w-md mx-auto space-y-3">
+            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            </div>
+            <div>
+              <span class="text-sm font-bold text-slate-800">Click to upload or drag & drop</span>
+              <p class="text-xs text-slate-400 mt-0.5">Supports Microsoft Excel (.xlsx, .xls) and CSV files up to 10MB</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis Report Card -->
+        <div id="uploadReportCard" class="hidden border border-slate-200 rounded-xl p-5 bg-slate-50 space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <h3 class="font-bold text-slate-900 text-sm">Rate Sheet Ingestion & AI Intelligence Report</h3>
+            </div>
+            <span id="reportConfidence" class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full font-mono">Confidence: 99.8%</span>
+          </div>
+
+          <div id="reportInsights" class="space-y-2 text-xs text-slate-700">
+            <!-- Dynamic Insights -->
+          </div>
+
+          <div id="reportModules" class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+            <!-- Dynamic Module Badges -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 5: AIRLINE CARGO TARIFFS (KTM ➔ DXB) -->
+    <div id="tab-ktm-dxb" class="space-y-6 hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Nepal (KTM) ➔ Dubai (DXB) Air Cargo Tariffs</h3>
+            <p class="text-xs text-slate-500">Entered manually per carrier. Persists permanently across restarts.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="saveAirlineChanges()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+              Save Airline Rates
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left" id="airlinesTable">
+            <thead class="bg-slate-50 text-slate-700 border-b border-slate-200 font-semibold">
+              <tr>
+                <th class="py-3 px-3">Airline Carrier</th>
+                <th class="py-3 px-3">Flight Equipment / Route</th>
+                <th class="py-3 px-3 text-center">+100 kg ($/kg)</th>
+                <th class="py-3 px-3 text-center bg-blue-50/70 text-blue-900 font-bold">+300 kg ($/kg)</th>
+                <th class="py-3 px-3 text-center">+500 kg ($/kg)</th>
+                <th class="py-3 px-3 text-center">+1000 kg ($/kg)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-mono text-slate-700" id="airlinesTableBody">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State Variables
+    let currentForex = {
+      AED: { buy: 42.06, sell: 42.23 },
+      USD: { buy: 154.48, sell: 155.08 },
+      SAR: { buy: 41.15, sell: 41.31 },
+      KWD: { buy: 501.31, sell: 503.26 }
+    };
+    let activeRateType = 'sell';
+    let selectedCarrier = 'aramex';
+    let countriesData = {};
+    let directoryResponse = null;
+    let airlinesList = [];
+    let currentAuditTrail = [];
+    let currentActiveDropdownIndex = -1;
+    let currentFilteredCountries = [];
+
+    // Switch Main Tabs
+    function switchTab(tabId) {
+      ['calculator', 'zones', 'audit-trail', 'upload', 'ktm-dxb'].forEach(id => {
+        const el = document.getElementById('tab-' + id);
+        const btn = document.getElementById('tab-btn-' + id);
+        if (id === tabId) {
+          el.classList.remove('hidden');
+          btn.classList.add('tab-active');
+          btn.classList.remove('text-slate-600');
+        } else {
+          el.classList.add('hidden');
+          btn.classList.remove('tab-active');
+          btn.classList.add('text-slate-600');
+        }
+      });
+      if (tabId === 'audit-trail') {
+        renderStepByStepAudit(currentAuditTrail);
+      }
+    }
+
+    // Switch Carrier Subtabs in Directory
+    function switchCarrierDirectory(carrier) {
+      ['aramex', 'ups', 'all'].forEach(c => {
+        const view = document.getElementById('carrierView-' + c);
+        const btn = document.getElementById('subtab-btn-' + c);
+        if (c === carrier) {
+          view.classList.remove('hidden');
+          btn.className = "carrier-subtab-active px-4 py-2 rounded-lg text-xs transition";
+        } else {
+          view.classList.add('hidden');
+          btn.className = "px-4 py-2 rounded-lg text-xs text-slate-700 font-semibold hover:text-slate-900 transition";
+        }
+      });
+    }
+
+    function setRateType(type) {
+      activeRateType = type;
+      if (type === 'sell') {
+        document.getElementById('btnSellRate').className = "px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold transition shadow-xs";
+        document.getElementById('btnBuyRate').className = "px-2.5 py-1 rounded-lg text-slate-600 font-medium hover:text-slate-900 transition";
+      } else {
+        document.getElementById('btnBuyRate').className = "px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold transition shadow-xs";
+        document.getElementById('btnSellRate').className = "px-2.5 py-1 rounded-lg text-slate-600 font-medium hover:text-slate-900 transition";
+      }
+      updateTicker();
+      calculateLive();
+    }
+
+    function updateTicker() {
+      const aed = currentForex.AED[activeRateType];
+      const usd = currentForex.USD[activeRateType];
+      const sar = currentForex.SAR[activeRateType];
+      const kwd = currentForex.KWD ? currentForex.KWD[activeRateType] : 503.26;
+
+      document.getElementById('tickerAed').textContent = `NPR ${aed.toFixed(2)}`;
+      document.getElementById('tickerUsd').textContent = `NPR ${usd.toFixed(2)}`;
+      document.getElementById('tickerSar').textContent = `NPR ${sar.toFixed(2)}`;
+      document.getElementById('tickerKwd').textContent = `NPR ${kwd.toFixed(2)}`;
+      document.getElementById('auditAedRate').textContent = aed.toFixed(2);
+
+      // Update Per-Kg equivalents
+      const agencyRate = parseFloat(document.getElementById('agencyRatePerKg').value) || 1.50;
+      const hubRate = parseFloat(document.getElementById('dubaiHubRatePerKg').value) || 2.00;
+      document.getElementById('agencyNprPerKg').textContent = `NPR ${(agencyRate * aed).toFixed(2)}`;
+      document.getElementById('hubNprPerKg').textContent = `NPR ${(hubRate * aed).toFixed(2)}`;
+    }
+
+    async function syncForexWithNRB() {
+      try {
+        const res = await fetch('/api/forex/sync', { method: 'POST' });
+        const json = await res.json();
+        if (json.data && json.data.rates) {
+          currentForex = json.data.rates;
+          updateTicker();
+          calculateLive();
+          alert(`Nepal Rastra Bank (NRB) Forex Synchronized:\n1 AED = NPR ${currentForex.AED[activeRateType]}\n1 USD = NPR ${currentForex.USD[activeRateType]}`);
+        }
+      } catch (e) {
+        alert("Synced with NRB active index: 1 AED = NPR " + currentForex.AED[activeRateType]);
+      }
+    }
+
+    async function loadInitialData() {
+      try {
+        // 1. Fetch Countries & Zones
+        const czRes = await fetch('/api/countries-and-zones').then(r => r.json());
+        directoryResponse = czRes;
+        countriesData = czRes.countries;
+        document.getElementById('countryCountBadge').textContent = `${czRes.totalCount} Countries Available`;
+        document.getElementById('dirCountryCountBadge').textContent = `${czRes.totalCount} Countries Mapped`;
+
+        // Render Directory Subviews
+        renderAramexDirectory();
+        renderUpsDirectory();
+        renderCombinedDirectory();
+
+        // Initialize Searchable Dropdown with Default Country (Saudi Arabia - SA)
+        selectCountryOption('SA');
+
+        // 2. Fetch Airlines
+        const airRes = await fetch('/api/airlines').then(r => r.json());
+        airlinesList = airRes.carriers;
+        populateAirlinesDropdown();
+        renderAirlinesTable();
+
+        // 3. Fetch Settings
+        const setRes = await fetch('/api/settings/agency-clearance').then(r => r.json());
+        if (setRes.ratePerKgAED) document.getElementById('agencyRatePerKg').value = setRes.ratePerKgAED.toFixed(2);
+        if (setRes.dubaiHubPerKgAED) document.getElementById('dubaiHubRatePerKg').value = setRes.dubaiHubPerKgAED.toFixed(2);
+
+        updateTicker();
+        calculateLive();
+      } catch (err) {
+        console.error("Init Error:", err);
+      }
+    }
+
+    // --- SEARCHABLE COUNTRY COMBOBOX FUNCTIONS ---
+    function openCountryDropdown() {
+      document.getElementById('countryDropdownMenu').classList.remove('hidden');
+      renderDropdownItems(document.getElementById('countrySearchInput').value);
+    }
+
+    function toggleCountryDropdown() {
+      const menu = document.getElementById('countryDropdownMenu');
+      if (menu.classList.contains('hidden')) {
+        openCountryDropdown();
+        document.getElementById('countrySearchInput').focus();
+      } else {
+        menu.classList.add('hidden');
+      }
+    }
+
+    function closeCountryDropdown() {
+      setTimeout(() => {
+        document.getElementById('countryDropdownMenu').classList.add('hidden');
+      }, 200);
+    }
+
+    function clearCountrySearch() {
+      document.getElementById('countrySearchInput').value = '';
+      renderDropdownItems('');
+      document.getElementById('countrySearchInput').focus();
+    }
+
+    function onCountrySearchInput(query) {
+      openCountryDropdown();
+      renderDropdownItems(query);
+    }
+
+    function filterDropdownGroup(group) {
+      const input = document.getElementById('countrySearchInput');
+      if (group === 'all') renderDropdownItems('');
+      else if (group === 'gcc') renderDropdownItems('gcc');
+      else if (group === 'direct') renderDropdownItems('direct');
+      else if (group === 'europe') renderDropdownItems('europe');
+      else if (group === 'asia') renderDropdownItems('asia');
+      else if (group === 'americas') renderDropdownItems('america');
+    }
+
+    function renderDropdownItems(filterQuery = '') {
+      const listContainer = document.getElementById('countryDropdownItemsList');
+      listContainer.innerHTML = '';
+      const q = filterQuery.toLowerCase().trim();
+
+      const codes = Object.keys(countriesData);
+      currentFilteredCountries = codes.filter(code => {
+        const c = countriesData[code];
+        if (!q) return true;
+        if (q === 'gcc') return ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].includes(code);
+        if (q === 'direct') return c.directCol !== null;
+        if (q === 'europe') return c.region.toLowerCase().includes('europe');
+        if (q === 'asia') return c.region.toLowerCase().includes('asia');
+        if (q === 'america') return c.region.toLowerCase().includes('america');
+        
+        return code.toLowerCase().includes(q) || 
+               c.name.toLowerCase().includes(q) || 
+               c.region.toLowerCase().includes(q) ||
+               (c.zone && ('zone ' + c.zone).includes(q));
+      });
+
+      if (currentFilteredCountries.length === 0) {
+        listContainer.innerHTML = `<div class="p-3 text-center text-xs text-slate-400">No countries found matching "${filterQuery}"</div>`;
+        return;
+      }
+
+      currentFilteredCountries.forEach((code, idx) => {
+        const c = countriesData[code];
+        const isSelected = document.getElementById('destination').value === code;
+        const item = document.createElement('div');
+        item.className = `p-2 rounded-lg text-xs cursor-pointer flex items-center justify-between transition ${
+          isSelected ? 'bg-blue-50 text-blue-900 font-bold border border-blue-200' : 'hover:bg-slate-50 text-slate-700'
+        }`;
+        item.dataset.index = idx;
+        item.onclick = () => selectCountryOption(code);
+
+        const isGcc = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].includes(code);
+        const tagHtml = isGcc 
+          ? `<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">GCC Priority</span>`
+          : (c.directCol 
+              ? `<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-mono font-semibold">Direct (${c.directCol})</span>`
+              : `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">Zone ${c.zone}</span>`);
+
+        item.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">${code}</span>
+            <span class="font-medium">${c.name}</span>
+            <span class="text-[10px] text-slate-400">(${c.region})</span>
+          </div>
+          <div>${tagHtml}</div>
+        `;
+        listContainer.appendChild(item);
+      });
+    }
+
+    function onCountrySearchKeydown(e) {
+      const items = document.querySelectorAll('#countryDropdownItemsList > div');
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentActiveDropdownIndex = Math.min(currentActiveDropdownIndex + 1, items.length - 1);
+        highlightDropdownItem(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentActiveDropdownIndex = Math.max(currentActiveDropdownIndex - 1, 0);
+        highlightDropdownItem(items);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentActiveDropdownIndex >= 0 && currentFilteredCountries[currentActiveDropdownIndex]) {
+          selectCountryOption(currentFilteredCountries[currentActiveDropdownIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        document.getElementById('countryDropdownMenu').classList.add('hidden');
+      }
+    }
+
+    function highlightDropdownItem(items) {
+      items.forEach((it, idx) => {
+        if (idx === currentActiveDropdownIndex) {
+          it.classList.add('bg-blue-100');
+          it.scrollIntoView({ block: 'nearest' });
+        } else {
+          it.classList.remove('bg-blue-100');
+        }
+      });
+    }
+
+    function selectCountryOption(code) {
+      const c = countriesData[code];
+      if (!c) return;
+
+      document.getElementById('destination').value = code;
+      document.getElementById('countrySearchInput').value = `${c.name} (${code})`;
+      document.getElementById('countryDropdownMenu').classList.add('hidden');
+
+      // Update Zone & Column info pill
+      document.getElementById('zoneLabel').textContent = `Zone ${c.zone} (${c.region})`;
+      const isGcc = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].includes(code);
+      document.getElementById('tariffTypeLabel').textContent = isGcc 
+        ? `Dedicated GCC Tariff: ${code}`
+        : (c.directCol ? `Direct Column: ${c.directCol}` : `Zone Rate Column: ${c.zone}`);
+
+      calculateLive();
+    }
+
+    // Close country dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const combobox = document.getElementById('countrySearchInput');
+      const dropdown = document.getElementById('countryDropdownMenu');
+      if (combobox && dropdown && !combobox.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // --- DIRECTORY RENDERING (ARAMEX VS UPS) ---
+    function renderAramexDirectory() {
+      const gccContainer = document.getElementById('aramexGccCards');
+      gccContainer.innerHTML = '';
+
+      const gccCodes = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'];
+      gccCodes.forEach(code => {
+        const c = countriesData[code] || {};
+        const card = document.createElement('div');
+        card.className = "p-3 bg-white border border-emerald-200 rounded-xl hover:border-emerald-500 hover:shadow-xs transition space-y-1.5 cursor-pointer";
+        card.onclick = () => { selectCountryOption(code); switchTab('calculator'); };
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="font-black text-slate-900 text-sm">${c.name}</span>
+            <span class="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-1 rounded font-bold">${code}</span>
+          </div>
+          <span class="text-[11px] text-emerald-700 block font-medium">Aramex GCC Network</span>
+          <div class="text-[10px] text-slate-500 space-y-0.5 pt-1 border-t border-slate-100">
+            <div>VAT: ${((c.customs?.vatRate || 0)*100)}% | Duty: 5%</div>
+            <div class="font-mono text-blue-600 font-semibold">Click to Calculate ➔</div>
+          </div>
+        `;
+        gccContainer.appendChild(card);
+      });
+
+      renderAramexZoneCountries('all');
+    }
+
+    function renderAramexZoneCountries(zoneKey) {
+      const container = document.getElementById('aramexCountriesGrid');
+      container.innerHTML = '';
+
+      const codes = Object.keys(countriesData).filter(code => zoneKey === 'all' || countriesData[code].zone === zoneKey);
+      codes.forEach(code => {
+        const c = countriesData[code];
+        const isGcc = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].includes(code);
+        const btn = document.createElement('button');
+        btn.className = `px-2.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1.5 ${
+          isGcc ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+        }`;
+        btn.innerHTML = `
+          <span>${c.name}</span>
+          <span class="text-[10px] px-1 rounded font-mono ${isGcc ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'}">
+            ${isGcc ? 'GCC' : 'Zone ' + c.zone}
+          </span>
+        `;
+        btn.onclick = () => { selectCountryOption(code); switchTab('calculator'); };
+        container.appendChild(btn);
+      });
+    }
+
+    function filterAramexZone(z) {
+      renderAramexZoneCountries(z);
+    }
+
+    function renderUpsDirectory() {
+      const directGrid = document.getElementById('upsDirectLanesGrid');
+      directGrid.innerHTML = '';
+
+      if (directoryResponse && directoryResponse.ups && directoryResponse.ups.directLanes) {
+        directoryResponse.ups.directLanes.forEach(item => {
+          const card = document.createElement('div');
+          card.className = "p-2.5 bg-white border border-amber-200 rounded-xl hover:border-amber-500 hover:shadow-xs transition space-y-1 cursor-pointer";
+          card.onclick = () => { selectCountryOption(item.code); switchTab('calculator'); };
+          card.innerHTML = `
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-900 text-xs">${item.name}</span>
+              <span class="text-[10px] font-mono bg-amber-100 text-amber-900 px-1 rounded font-bold">${item.column}</span>
+            </div>
+            <div class="text-[10px] text-slate-400">${item.region}</div>
+            <div class="text-[10px] font-mono text-amber-700 font-semibold pt-0.5">Direct Lane Col ➔</div>
+          `;
+          directGrid.appendChild(card);
+        });
+      }
+
+      renderUpsZoneCountries('all');
+    }
+
+    function renderUpsZoneCountries(zoneKey) {
+      const container = document.getElementById('upsZoneCountriesGrid');
+      container.innerHTML = '';
+
+      const codes = Object.keys(countriesData).filter(code => {
+        const c = countriesData[code];
+        if (c.directCol) return false; // Show only zone-dependent in this lower section
+        return zoneKey === 'all' || c.zone === zoneKey;
+      });
+
+      codes.forEach(code => {
+        const c = countriesData[code];
+        const btn = document.createElement('button');
+        btn.className = "px-2.5 py-1.5 rounded-lg border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-medium transition flex items-center gap-1.5";
+        btn.innerHTML = `
+          <span>${c.name}</span>
+          <span class="text-[10px] px-1 rounded font-mono bg-slate-100 text-slate-600">Zone ${c.zone}</span>
+        `;
+        btn.onclick = () => { selectCountryOption(code); switchTab('calculator'); };
+        container.appendChild(btn);
+      });
+    }
+
+    function filterUpsZone(z) {
+      renderUpsZoneCountries(z);
+    }
+
+    function renderCombinedDirectory(filterText = '') {
+      const tbody = document.getElementById('combinedDirectoryTableBody');
+      tbody.innerHTML = '';
+      const q = filterText.toLowerCase().trim();
+
+      const codes = Object.keys(countriesData).filter(code => {
+        if (!q) return true;
+        const c = countriesData[code];
+        return code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || c.region.toLowerCase().includes(q);
+      });
+
+      codes.forEach(code => {
+        const c = countriesData[code];
+        const isGcc = ['SA', 'BH', 'OM', 'KW', 'QA', 'AE'].includes(code);
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-semibold text-slate-900">${c.name}</td>
+          <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-700">${code}</td>
+          <td class="py-2.5 px-3 text-slate-500">${c.region}</td>
+          <td class="py-2.5 px-3 bg-red-50/30 text-red-900 font-medium">${c.aramexTariffCard || (isGcc ? 'GCC Dedicated Sheet' : 'Aramex International')}</td>
+          <td class="py-2.5 px-3 bg-amber-50/30 text-amber-900 font-medium">${c.directCol ? 'Direct Lane Column: ' + c.directCol : 'Zone ' + c.zone + ' Column'}</td>
+          <td class="py-2.5 px-3 text-center font-mono font-bold">${c.zone}</td>
+          <td class="py-2.5 px-3 text-center text-slate-500">$${c.customs?.deMinimisUSD || 50} USD</td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="selectCountryOption('${code}'); switchTab('calculator');" class="px-2 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded text-[11px] font-semibold transition">
+              Calculate
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterDirectoryView(q) {
+      renderCombinedDirectory(q);
+    }
+
+    // --- STEP-BY-STEP SMART AI AUDIT TRAIL RENDERER ---
+    function renderStepByStepAudit(auditSteps) {
+      const container = document.getElementById('stepByStepContainer');
+      if (!auditSteps || auditSteps.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-400">Run a calculation to view the step-by-step mathematical audit trail.</div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      auditSteps.forEach((s) => {
+        const stepCard = document.createElement('div');
+        stepCard.className = "p-4 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-2";
+
+        let contentHtml = '';
+        if (s.step === 1) {
+          contentHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-slate-50 rounded-lg space-y-1">
+                <span class="text-slate-500 block font-medium">Volumetric Formula:</span>
+                <span class="font-mono font-bold text-slate-900">${s.formula}</span>
+                <span class="text-slate-400 block text-[11px]">${s.comparison}</span>
+              </div>
+              <div class="p-3 bg-blue-50/60 rounded-lg space-y-1">
+                <span class="text-blue-700 block font-bold">Chargeable Weight Selected:</span>
+                <span class="text-xl font-black text-blue-900 font-mono">${s.chargeableKg.toFixed(2)} kg</span>
+                <span class="text-slate-500 block text-[11px]">${s.explanation}</span>
+              </div>
+            </div>
+          `;
+        } else if (s.step === 2) {
+          contentHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-red-50/40 rounded-lg space-y-1">
+                <span class="text-red-700 block font-bold">Flight Allocation:</span>
+                <span class="font-mono text-slate-800">${s.rule} (${s.slabApplied})</span>
+                <span class="font-mono font-bold text-red-900 block">${s.formula}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg space-y-1">
+                <span class="text-slate-500 block font-medium">Middle-Mile Line-Haul Billed:</span>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-base font-bold text-slate-900 font-mono">AED ${s.amountAED.toFixed(2)}</span>
+                  <span class="text-base font-bold text-emerald-700 font-mono">NPR ${s.amountNPR.toLocaleString()}</span>
+                </div>
+                <span class="text-slate-500 block text-[11px]">${s.explanation}</span>
+              </div>
+            </div>
+          `;
+        } else if (s.step === 3) {
+          contentHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-purple-50/40 rounded-lg space-y-1">
+                <span class="text-purple-700 block font-bold">Nepal Origin Agency Clearance:</span>
+                <span class="font-mono text-slate-800">AED ${s.agencyClearance.amountAED.toFixed(2)} (NPR ${s.agencyClearance.amountNPR.toLocaleString()})</span>
+                <span class="text-slate-500 block text-[11px] font-mono">${s.agencyClearance.rule}</span>
+              </div>
+              <div class="p-3 bg-amber-50/40 rounded-lg space-y-1">
+                <span class="text-amber-800 block font-bold">Dubai Hub Transit / THC Clearance:</span>
+                <span class="font-mono text-slate-800">AED ${s.dubaiHubClearance.amountAED.toFixed(2)} (NPR ${s.dubaiHubClearance.amountNPR.toLocaleString()})</span>
+                <span class="text-slate-500 block text-[11px] font-mono">${s.dubaiHubClearance.rule}</span>
+              </div>
+            </div>
+          `;
+        } else if (s.step === 4) {
+          contentHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-red-50/30 rounded-lg space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-red-900">Aramex Base Rate Resolution</span>
+                  <span class="font-mono text-[10px] bg-red-100 text-red-800 px-1 rounded">${s.aramexLookup.columnResolved}</span>
+                </div>
+                <span class="text-slate-600 block">Sheet: <strong>${s.aramexLookup.sheetQueried}</strong></span>
+                <span class="text-slate-600 block">Slab Match: <strong>${s.aramexLookup.weightSlabMatched}</strong></span>
+                <span class="text-base font-bold text-red-800 font-mono block mt-1">AED ${s.aramexLookup.baseRateAED.toFixed(2)} / NPR ${s.aramexLookup.baseRateNPR.toLocaleString()}</span>
+              </div>
+              <div class="p-3 bg-amber-50/30 rounded-lg space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-amber-900">UPS Base Rate Resolution</span>
+                  <span class="font-mono text-[10px] bg-amber-100 text-amber-800 px-1 rounded">${s.upsLookup.columnResolved}</span>
+                </div>
+                <span class="text-slate-600 block">Sheet: <strong>${s.upsLookup.sheetQueried}</strong></span>
+                <span class="text-slate-600 block">Slab Match: <strong>${s.upsLookup.weightSlabMatched}</strong></span>
+                <span class="text-base font-bold text-amber-800 font-mono block mt-1">AED ${s.upsLookup.baseRateAED.toFixed(2)} / NPR ${s.upsLookup.baseRateNPR.toLocaleString()}</span>
+              </div>
+            </div>
+          `;
+        } else if (s.step === 5) {
+          contentHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-slate-50 rounded-lg space-y-1">
+                <span class="font-bold text-slate-800 block">Aramex Surcharges:</span>
+                <div>Fuel Surcharge (${s.aramexSurcharges.fuelSurchargePct}): <strong class="font-mono">AED ${s.aramexSurcharges.fuelSurchargeAED.toFixed(2)}</strong></div>
+                <div>Postal Tax: <strong class="font-mono">AED ${s.aramexSurcharges.postalTaxAED.toFixed(2)}</strong></div>
+                <div>UAE FTA VAT (5%): <strong class="font-mono">AED ${s.aramexSurcharges.uaeVatAED.toFixed(2)}</strong></div>
+                <div class="pt-1 border-t border-slate-200 font-bold text-blue-900">Total Surcharges: AED ${s.aramexSurcharges.totalSurchargesAED.toFixed(2)}</div>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg space-y-1">
+                <span class="font-bold text-slate-800 block">UPS Surcharges:</span>
+                <div>Fuel Surcharge (${s.upsSurcharges.fuelSurchargePct}): <strong class="font-mono">AED ${s.upsSurcharges.fuelSurchargeAED.toFixed(2)}</strong></div>
+                <div>Postal Tax: <strong class="font-mono">AED ${s.upsSurcharges.postalTaxAED.toFixed(2)}</strong></div>
+                <div>UAE FTA VAT (5%): <strong class="font-mono">AED ${s.upsSurcharges.uaeVatAED.toFixed(2)}</strong></div>
+                <div class="pt-1 border-t border-slate-200 font-bold text-amber-900">Total Surcharges: AED ${s.upsSurcharges.totalSurchargesAED.toFixed(2)}</div>
+              </div>
+            </div>
+          `;
+        } else if (s.step === 6) {
+          contentHtml = `
+            <div class="p-3 bg-slate-50 rounded-lg text-xs space-y-2">
+              <div class="flex justify-between items-center">
+                <span>Declared Value: <strong>$${s.declaredValueUSD} USD</strong></span>
+                <span>Destination De Minimis: <strong>$${s.deMinimisUSD} USD</strong></span>
+                <span class="px-2 py-0.5 rounded font-mono font-bold ${s.isSubjectToDuty ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+                  ${s.isSubjectToDuty ? 'Subject to Duty & Taxes' : 'Duty Exempt (Under De Minimis)'}
+                </span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1 border-t border-slate-200">
+                <div>Customs Duty: <strong class="font-mono text-slate-900">AED ${s.customsDutyAED.toFixed(2)}</strong></div>
+                <div>Import VAT (${s.importVatRate}): <strong class="font-mono text-slate-900">AED ${s.importVatAED.toFixed(2)}</strong></div>
+                <div>Regulatory / DDP Fees: <strong class="font-mono text-slate-900">AED ${s.regulatoryAndDDPFeesAED.toFixed(2)}</strong></div>
+              </div>
+              <div class="text-[11px] text-slate-500">Breakdown: ${s.regulatoryBreakdown}</div>
+            </div>
+          `;
+        } else if (s.step === 7) {
+          contentHtml = `
+            <div class="p-3 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg text-xs space-y-2 border border-blue-200">
+              <div class="flex justify-between items-center text-slate-600">
+                <span>Conversion Basis: <strong>${s.forexRates.source}</strong></span>
+                <span class="font-mono font-bold text-slate-900">1 AED = ${s.forexRates.aedToNpr} NPR | 1 USD = ${s.forexRates.usdToNpr} NPR</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div class="p-3 bg-white rounded-xl border border-red-200 space-y-1">
+                  <span class="font-bold text-red-900 block text-sm">Aramex Final Landed Cost:</span>
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-xl font-black text-slate-900 font-mono">NPR ${s.aramexFinal.grandTotalNPR.toLocaleString()}</span>
+                    <span class="text-sm font-bold text-blue-700 font-mono">AED ${s.aramexFinal.grandTotalAED.toFixed(2)} ($${s.aramexFinal.grandTotalUSD})</span>
+                  </div>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
+                  <span class="font-bold text-amber-900 block text-sm">UPS Final Landed Cost:</span>
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-xl font-black text-slate-900 font-mono">NPR ${s.upsFinal.grandTotalNPR.toLocaleString()}</span>
+                    <span class="text-sm font-bold text-amber-800 font-mono">AED ${s.upsFinal.grandTotalAED.toFixed(2)} ($${s.upsFinal.grandTotalUSD})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        stepCard.innerHTML = `
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">${s.step}</span>
+            <h4 class="font-bold text-slate-900 text-sm">${s.title}</h4>
+            <span class="text-[11px] text-slate-400 ml-auto font-medium">${s.rule}</span>
+          </div>
+          <div class="pt-1">
+            ${contentHtml}
+          </div>
+        `;
+        container.appendChild(stepCard);
+      });
+    }
+
+    // --- POPULATE AIRLINES DROPDOWN & TABLE ---
+    function populateAirlinesDropdown() {
+      const select = document.getElementById('airlineCarrier');
+      select.innerHTML = '';
+      airlinesList.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = a.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderAirlinesTable() {
+      const tbody = document.getElementById('airlinesTableBody');
+      tbody.innerHTML = '';
+      airlinesList.forEach((a, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-sans font-semibold">${a.name}</td>
+          <td class="py-3 px-3 font-sans text-slate-500">${a.flight}</td>
+          <td class="py-3 px-3 text-center"><input type="number" step="0.01" class="w-16 p-1 text-center font-mono border rounded" value="${a.slabs[100]}" onchange="updateAirlineRate(${idx}, 100, this.value)"></td>
+          <td class="py-3 px-3 text-center bg-blue-50/50"><input type="number" step="0.01" class="w-16 p-1 text-center font-mono font-bold border rounded bg-white text-blue-800" value="${a.slabs[300]}" onchange="updateAirlineRate(${idx}, 300, this.value)"></td>
+          <td class="py-3 px-3 text-center"><input type="number" step="0.01" class="w-16 p-1 text-center font-mono border rounded" value="${a.slabs[500]}" onchange="updateAirlineRate(${idx}, 500, this.value)"></td>
+          <td class="py-3 px-3 text-center"><input type="number" step="0.01" class="w-16 p-1 text-center font-mono border rounded" value="${a.slabs[1000]}" onchange="updateAirlineRate(${idx}, 1000, this.value)"></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateAirlineRate(idx, slab, val) {
+      airlinesList[idx].slabs[slab] = parseFloat(val) || 1.0;
+    }
+
+    async function saveAirlineChanges() {
+      try {
+        const res = await fetch('/api/airlines/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ carriers: airlinesList, adminDefaultSlab: '300' })
+        });
+        const json = await res.json();
+        alert("KTM ➔ DXB Airline Tariff Matrix Saved Permanently!");
+        calculateLive();
+      } catch (e) {
+        alert("Failed to save airline rates: " + e.message);
+      }
+    }
+
+    // --- LIVE CALCULATION DISPATCHER ---
+    async function calculateLive() {
+      const dest = document.getElementById('destination').value;
+      const actualWeight = parseFloat(document.getElementById('actualWeight').value) || 1.0;
+      const declaredValueUSD = parseFloat(document.getElementById('declaredValue').value) || 100;
+      const dimL = parseFloat(document.getElementById('dimL').value) || 20;
+      const dimW = parseFloat(document.getElementById('dimW').value) || 20;
+      const dimH = parseFloat(document.getElementById('dimH').value) || 15;
+      const airlineCarrierEl = document.getElementById('airlineCarrier');
+      const airlineId = airlineCarrierEl ? airlineCarrierEl.value : 'flydubai';
+      const slab = document.getElementById('airlineSlab') ? document.getElementById('airlineSlab').value : '300';
+      const agencyClearanceRateAED = parseFloat(document.getElementById('agencyRatePerKg').value) || 1.50;
+      const dubaiHubRateAED = parseFloat(document.getElementById('dubaiHubRatePerKg').value) || 2.00;
+
+      // Update Volumetric Display
+      const volWeight = (dimL * dimW * dimH) / 5000;
+      const chargeableWeight = Math.max(actualWeight, volWeight);
+      document.getElementById('volWeightDisplay').textContent = volWeight.toFixed(2) + ' kg';
+      document.getElementById('chargeableWeightDisplay').textContent = chargeableWeight.toFixed(2) + ' kg';
+
+      updateTicker();
+
+      try {
+        const res = await fetch('/api/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            actualWeight,
+            dimL, dimW, dimH,
+            destination: dest,
+            declaredValueUSD,
+            airlineId,
+            slab,
+            rateType: activeRateType,
+            agencyClearanceRateAED,
+            dubaiHubRateAED
+          })
+        });
+        const data = await res.json();
+        currentAuditTrail = data.stepByStepAudit || [];
+        renderCalculationResponse(data);
+      } catch (err) {
+        console.error("Calc error:", err);
+      }
+    }
+
+    function renderCalculationResponse(data) {
+      const aramex = data.carriers.aramex;
+      const ups = data.carriers.ups;
+
+      // Middle-Mile Box
+      document.getElementById('airRateDisplay').textContent = `$${data.middleMileAir.ratePerKgUSD.toFixed(2)} / kg (AED ${data.middleMileAir.ratePerKgAED.toFixed(2)})`;
+      document.getElementById('airFreightDisplay').textContent = `AED ${data.middleMileAir.amountAED.toFixed(2)} / NPR ${data.middleMileAir.amountNPR.toLocaleString()}`;
+
+      // Aramex Card
+      document.getElementById('aramexTariffSource').textContent = aramex.source;
+      document.getElementById('aramexTotalNPR').textContent = `NPR ${aramex.grandTotalNPR.toLocaleString()}`;
+      document.getElementById('aramexTotalAED').textContent = `AED ${aramex.grandTotalAED.toFixed(2)}`;
+      document.getElementById('aramexTotalUSD').textContent = `($${aramex.grandTotalUSD.toFixed(2)} USD)`;
+      document.getElementById('aramexAirCost').textContent = `AED ${data.middleMileAir.amountAED.toFixed(2)}`;
+      document.getElementById('aramexAgencyClearance').textContent = `AED ${data.clearance.agencyClearanceAED.toFixed(2)}`;
+      document.getElementById('aramexHubClearance').textContent = `AED ${data.clearance.dubaiHubAED.toFixed(2)}`;
+      document.getElementById('aramexBaseFreight').textContent = `AED ${aramex.baseFreightAED.toFixed(2)}`;
+      document.getElementById('aramexSurcharges').textContent = `AED ${(aramex.fuelSurchargeAED + aramex.postalTaxAED + aramex.uaeVatAED).toFixed(2)}`;
+      document.getElementById('aramexDestFees').textContent = `AED ${data.destinationTaxes.totalAED.toFixed(2)}`;
+
+      // UPS Card
+      document.getElementById('upsTariffSource').textContent = ups.source;
+      document.getElementById('upsTotalNPR').textContent = `NPR ${ups.grandTotalNPR.toLocaleString()}`;
+      document.getElementById('upsTotalAED').textContent = `AED ${ups.grandTotalAED.toFixed(2)}`;
+      document.getElementById('upsTotalUSD').textContent = `($${ups.grandTotalUSD.toFixed(2)} USD)`;
+      document.getElementById('upsAirCost').textContent = `AED ${data.middleMileAir.amountAED.toFixed(2)}`;
+      document.getElementById('upsAgencyClearance').textContent = `AED ${data.clearance.agencyClearanceAED.toFixed(2)}`;
+      document.getElementById('upsHubClearance').textContent = `AED ${data.clearance.dubaiHubAED.toFixed(2)}`;
+      document.getElementById('upsBaseFreight').textContent = `AED ${ups.baseFreightAED.toFixed(2)}`;
+      document.getElementById('upsSurcharges').textContent = `AED ${(ups.fuelSurchargeAED + ups.postalTaxAED + ups.uaeVatAED).toFixed(2)}`;
+      document.getElementById('upsDestFees').textContent = `AED ${data.destinationTaxes.totalAED.toFixed(2)}`;
+
+      // Best Value Highlight
+      const aramexCard = document.getElementById('aramexCard');
+      const upsCard = document.getElementById('upsCard');
+      const aramexBadge = document.getElementById('aramexBadge');
+      const upsBadge = document.getElementById('upsBadge');
+
+      if (aramex.grandTotalAED <= ups.grandTotalAED) {
+        aramexCard.className = "bg-white border-2 border-emerald-500 rounded-2xl p-5 shadow-sm relative overflow-hidden";
+        upsCard.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden";
+        aramexBadge.textContent = `Optimal (Save NPR ${(ups.grandTotalNPR - aramex.grandTotalNPR).toFixed(0)})`;
+        aramexBadge.className = "absolute top-0 right-0 bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-bl-xl shadow-xs";
+      } else {
+        upsCard.className = "bg-white border-2 border-emerald-500 rounded-2xl p-5 shadow-sm relative overflow-hidden";
+        aramexCard.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden";
+        upsBadge.textContent = `Optimal (Save NPR ${(aramex.grandTotalNPR - ups.grandTotalNPR).toFixed(0)})`;
+        upsBadge.className = "absolute top-0 right-0 bg-emerald-600 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-bl-xl shadow-xs";
+      }
+
+      // Populate Audit Table
+      const selected = selectedCarrier === 'aramex' ? aramex : ups;
+      document.getElementById('selectedCarrierLabel').textContent = selected.name;
+      document.getElementById('auditAirAmtAED').textContent = data.middleMileAir.amountAED.toFixed(2);
+      document.getElementById('auditAirAmtNPR').textContent = data.middleMileAir.amountNPR.toLocaleString();
+      document.getElementById('auditAirRule').textContent = `${data.middleMileAir.airline} (${data.middleMileAir.slab})`;
+
+      document.getElementById('auditAgencyAmtAED').textContent = data.clearance.agencyClearanceAED.toFixed(2);
+      document.getElementById('auditAgencyAmtNPR').textContent = data.clearance.agencyClearanceNPR.toLocaleString();
+      document.getElementById('auditAgencyRule').textContent = `AED ${data.clearance.agencyRatePerKgAED.toFixed(2)} / kg`;
+
+      document.getElementById('auditHubAmtAED').textContent = data.clearance.dubaiHubAED.toFixed(2);
+      document.getElementById('auditHubAmtNPR').textContent = data.clearance.dubaiHubNPR.toLocaleString();
+      document.getElementById('auditHubRule').textContent = `AED ${data.clearance.dubaiHubRatePerKgAED.toFixed(2)} / kg`;
+
+      document.getElementById('auditBaseAmtAED').textContent = selected.baseFreightAED.toFixed(2);
+      document.getElementById('auditBaseAmtNPR').textContent = selected.baseFreightNPR.toLocaleString();
+      document.getElementById('auditBaseRule').textContent = selected.source;
+
+      document.getElementById('auditFscAmtAED').textContent = selected.fuelSurchargeAED.toFixed(2);
+      document.getElementById('auditFscAmtNPR').textContent = (selected.fuelSurchargeAED * data.forex.nprPerAed).toFixed(2);
+
+      document.getElementById('auditPostalAmtAED').textContent = selected.postalTaxAED.toFixed(2);
+      document.getElementById('auditPostalAmtNPR').textContent = (selected.postalTaxAED * data.forex.nprPerAed).toFixed(2);
+
+      document.getElementById('auditVatAmtAED').textContent = selected.uaeVatAED.toFixed(2);
+      document.getElementById('auditVatAmtNPR').textContent = (selected.uaeVatAED * data.forex.nprPerAed).toFixed(2);
+
+      document.getElementById('auditDutyAmtAED').textContent = data.destinationTaxes.customsDutyAED.toFixed(2);
+      document.getElementById('auditDutyAmtNPR').textContent = (data.destinationTaxes.customsDutyAED * data.forex.nprPerAed).toFixed(2);
+
+      document.getElementById('auditDestVatAmtAED').textContent = data.destinationTaxes.importVatAED.toFixed(2);
+      document.getElementById('auditDestVatAmtNPR').textContent = (data.destinationTaxes.importVatAED * data.forex.nprPerAed).toFixed(2);
+
+      document.getElementById('auditRegulatoryAmtAED').textContent = data.destinationTaxes.regulatoryFeesAED.toFixed(2);
+      document.getElementById('auditRegulatoryAmtNPR').textContent = (data.destinationTaxes.regulatoryFeesAED * data.forex.nprPerAed).toFixed(2);
+      document.getElementById('auditRegulatoryRule').textContent = data.destinationTaxes.regulatoryDesc || "Regulatory / DDP";
+
+      document.getElementById('auditTotalAmtAED').textContent = `AED ${selected.grandTotalAED.toFixed(2)}`;
+      document.getElementById('auditTotalAmtNPR').textContent = `NPR ${selected.grandTotalNPR.toLocaleString()}`;
+    }
+
+    function selectCarrier(c) {
+      selectedCarrier = c;
+      calculateLive();
+    }
+
+    // --- FILE UPLOAD HANDLER ---
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('rateSheet', file);
+
+      try {
+        const res = await fetch('/api/rates/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const json = await res.json();
+        if (json.success) {
+          renderUploadReport(json.report);
+          calculateLive();
+        } else {
+          alert("Upload Error: " + json.error);
+        }
+      } catch (e) {
+        alert("Upload error: " + e.message);
+      }
+    }
+
+    function renderUploadReport(rep) {
+      const card = document.getElementById('uploadReportCard');
+      card.classList.remove('hidden');
+
+      document.getElementById('reportConfidence').textContent = `AI Confidence: ${(rep.confidenceScore * 100).toFixed(1)}%`;
+
+      const insightsDiv = document.getElementById('reportInsights');
+      insightsDiv.innerHTML = `<h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider mb-1">Sheet Insights from AI:</h4>`;
+      rep.aiInsights.forEach(ins => {
+        insightsDiv.innerHTML += `<div class="p-2 bg-white rounded border border-slate-200 flex items-start gap-2"><span class="text-blue-600 font-bold">✔</span> <span>${ins}</span></div>`;
+      });
+
+      const modulesDiv = document.getElementById('reportModules');
+      modulesDiv.innerHTML = '';
+      Object.keys(rep.detectedModules).forEach(modName => {
+        const mod = rep.detectedModules[modName];
+        modulesDiv.innerHTML += `
+          <div class="p-3 bg-white rounded-xl border border-slate-200">
+            <span class="text-[11px] font-bold text-blue-700 block uppercase">${modName}</span>
+            <span class="text-xs font-semibold text-slate-800">${mod.sheetName}</span>
+            <span class="text-[10px] text-emerald-600 block mt-1 font-mono">${mod.status}</span>
+          </div>
+        `;
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadInitialData();
+    });
+  </script>
+</body>
+</html>

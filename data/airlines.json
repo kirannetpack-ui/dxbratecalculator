@@ -1,0 +1,60 @@
+{
+  "adminDefaultSlab": "300",
+  "carriers": [
+    {
+      "id": "flydubai",
+      "name": "Flydubai Cargo (FZ)",
+      "flight": "Daily B737 Direct (KTM ➔ DXB)",
+      "slabs": {
+        "100": 1.25,
+        "300": 1.05,
+        "500": 0.9,
+        "1000": 0.78
+      }
+    },
+    {
+      "id": "nepal_airlines",
+      "name": "Nepal Airlines (RA)",
+      "flight": "Widebody A330 Direct (KTM ➔ DXB)",
+      "slabs": {
+        "100": 1.2,
+        "300": 1,
+        "500": 0.85,
+        "1000": 0.72
+      }
+    },
+    {
+      "id": "air_arabia",
+      "name": "Air Arabia (G9)",
+      "flight": "Daily Direct (KTM ➔ SHJ/DXB)",
+      "slabs": {
+        "100": 1.15,
+        "300": 0.95,
+        "500": 0.82,
+        "1000": 0.7
+      }
+    },
+    {
+      "id": "himalaya",
+      "name": "Himalaya Airlines (H9)",
+      "flight": "Direct A320 (KTM ➔ DXB)",
+      "slabs": {
+        "100": 1.22,
+        "300": 1.02,
+        "500": 0.88,
+        "1000": 0.75
+      }
+    },
+    {
+      "id": "qatar_cargo",
+      "name": "Qatar Airways Cargo (QR)",
+      "flight": "Daily Transit (KTM ➔ DOH ➔ DXB)",
+      "slabs": {
+        "100": 1.28,
+        "300": 1.08,
+        "500": 0.92,
+        "1000": 0.8
+      }
+    }
+  ]
+}

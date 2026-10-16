@@ -5,15 +5,17 @@ const path = require('path');
 class SheetAnalyzer {
   /**
    * Analyzes an uploaded XLSX workbook with intelligent multi-sheet heuristic detection
-   * @param {string} filePath - Absolute path to uploaded file
+   * @param {string|Buffer} fileInput - Absolute path or Buffer of uploaded file
    * @returns {object} Analysis report and extracted normalized rates
    */
-  static analyzeWorkbook(filePath) {
-    const workbook = XLSX.readFile(filePath);
+  static analyzeWorkbook(fileInput) {
+    const workbook = Buffer.isBuffer(fileInput)
+      ? XLSX.read(fileInput, { type: 'buffer' })
+      : XLSX.readFile(fileInput);
     const sheetNames = workbook.SheetNames;
 
     const report = {
-      filename: path.basename(filePath),
+      filename: typeof fileInput === 'string' ? path.basename(fileInput) : 'uploaded_rate_sheet.xlsx',
       sheetsFound: sheetNames,
       detectedModules: {},
       aiInsights: [],

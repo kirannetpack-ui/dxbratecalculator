@@ -16,9 +16,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configure Multer for File Uploads
+// Configure Multer for File Uploads in Memory (Serverless Safe)
 const upload = multer({
-  dest: path.join(__dirname, 'uploads'),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
@@ -413,7 +413,8 @@ app.post('/api/rates/upload', upload.single('rateSheet'), (req, res) => {
   }
 
   try {
-    const analysis = SheetAnalyzer.analyzeWorkbook(req.file.path);
+    const fileSource = req.file.buffer || req.file.path;
+    const analysis = SheetAnalyzer.analyzeWorkbook(fileSource);
 
     if (analysis.extractedData.gccRates) {
       gccRates = analysis.extractedData.gccRates;

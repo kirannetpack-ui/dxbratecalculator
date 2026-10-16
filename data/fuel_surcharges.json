@@ -1,15 +1,78 @@
 {
-  "lastUpdated": "2026-10-15T07:52:48.733Z",
+  "lastUpdated": "2026-10-16T06:57:00.706Z",
   "aramex": {
     "carrier": "Aramex Express",
-    "url": "https://www.aramex.com/us/en/services-solutions/fuel-surcharge",
+    "url": "https://www.aramex.com/ae/en/services-solutions/fuel-surcharge",
     "uaeUrl": "https://www.aramex.com/ae/en/services-solutions/fuel-surcharge",
-    "ratePercent": 14.5,
+    "ratePercent": 42.5,
     "source": "Aramex Dubai Hub & USGC Jet Fuel Index",
     "indexBasis": "US Gulf Coast (USGC) Jet Fuel Spot Price & UAE Fuel Price Committee",
     "frequency": "Monthly (Effective 1st of each month with 2-month data lag)",
     "status": "Verified & Synchronized",
     "history": [
+      {
+        "effectiveDate": "2026-10-16",
+        "ratePercent": 42.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-16T06:57:00.704Z",
+        "note": "Operator saved manual default FSC: Aramex 42.5%, UPS 53.25%"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 15.2,
+        "updatedAt": "2026-10-15T08:53:02.807Z",
+        "note": "Standard official circular rates"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 15.2,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T08:52:52.631Z",
+        "note": "Operator manual override"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 42.5,
+        "updatedAt": "2026-10-15T08:52:09.757Z",
+        "note": "Operator saved custom default FSC"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 42.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T08:42:47.333Z",
+        "note": "Updated via system control to match official Dubai circular (42.5%)"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T08:34:53.500Z",
+        "note": "Custom default FSC saved permanently"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 43.5,
+        "updatedAt": "2026-10-15T08:13:03.925Z",
+        "note": "Custom default FSC saved permanently"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 43.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T08:06:22.547Z",
+        "note": "Updated via system control to match official Dubai circular (43.5%)"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 14.5,
+        "previousRatePercent": 14.5,
+        "updatedAt": "2026-10-15T08:02:53.166Z",
+        "note": "Custom default FSC saved permanently"
+      },
       {
         "effectiveDate": "2026-10-15",
         "ratePercent": 14.5,
@@ -30,24 +93,88 @@
         "note": "Current effective monthly index for UAE/GCC corridor"
       }
     ],
-    "lastSynced": "2026-10-15T07:52:48.246Z",
-    "lastUpdated": "2026-10-15T07:52:48.733Z"
+    "lastSynced": "2026-10-15T08:20:33.973Z",
+    "lastUpdated": "2026-10-16T06:57:00.704Z"
   },
   "ups": {
     "carrier": "UPS Worldwide Express / Saver",
     "url": "https://www.ups.com/ae/en/support/shipping-support/shipping-costs-rates/fuel-surcharges",
-    "ratePercent": 16,
+    "ratePercent": 53.25,
     "source": "UPS UAE Shipping Costs and Surcharges Portal",
     "indexBasis": "US Gulf Coast (USGC) Kerosene-Type Jet Fuel Index (US EIA)",
     "frequency": "Monthly / First Monday of the Month",
     "status": "Verified & Synchronized",
     "history": [
       {
+        "effectiveDate": "2026-10-16",
+        "ratePercent": 53.25,
+        "previousRatePercent": 16,
+        "updatedAt": "2026-10-16T06:57:00.706Z",
+        "note": "Operator saved manual default FSC: Aramex 42.5%, UPS 53.25%"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 16,
+        "previousRatePercent": 17.5,
+        "updatedAt": "2026-10-15T08:53:02.808Z",
+        "note": "Standard official circular rates"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 17.5,
+        "previousRatePercent": 16,
+        "updatedAt": "2026-10-15T08:52:52.633Z",
+        "note": "Operator manual override"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 16,
+        "previousRatePercent": 53.25,
+        "updatedAt": "2026-10-15T08:52:09.758Z",
+        "note": "Operator saved custom default FSC"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 53.25,
+        "previousRatePercent": 16,
+        "updatedAt": "2026-10-15T08:42:55.334Z",
+        "note": "Updated via system control to match official Dubai circular (53.25%)"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 16,
+        "previousRatePercent": 16,
+        "updatedAt": "2026-10-15T08:34:53.507Z",
+        "note": "Custom default FSC saved permanently"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 16,
+        "previousRatePercent": 52.5,
+        "updatedAt": "2026-10-15T08:13:03.927Z",
+        "note": "Custom default FSC saved permanently"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 52.5,
+        "previousRatePercent": 16,
+        "updatedAt": "2026-10-15T08:06:59.170Z",
+        "note": "Updated via system control to match official Dubai circular (52.5%)"
+      },
+      {
+        "effectiveDate": "2026-10-15",
+        "ratePercent": 16,
+        "previousRatePercent": 16,
+        "updatedAt": "2026-10-15T08:02:53.168Z",
+        "note": "Custom default FSC saved permanently"
+      },
+      {
         "effectiveDate": "2026-10-01",
         "ratePercent": 16,
         "note": "Current effective monthly index for UAE international express shipments"
       }
     ],
-    "lastSynced": "2026-10-15T07:52:48.246Z"
+    "lastSynced": "2026-10-15T08:20:33.973Z",
+    "lastUpdated": "2026-10-16T06:57:00.706Z"
   }
 }

@@ -9,7 +9,7 @@ const fuelSurchargesPath = path.join(__dirname, 'data', 'fuel_surcharges.json');
  * Sources and monitors live fuel surcharges for UPS UAE and Aramex Dubai.
  * Official URLs:
  * - UPS UAE: https://www.ups.com/ae/en/support/shipping-support/shipping-costs-rates/fuel-surcharges
- * - Aramex: https://www.aramex.com/us/en/services-solutions/fuel-surcharge (and /ae/en/)
+ * - Aramex Dubai: https://www.aramex.com/ae/en/services-solutions/fuel-surcharge
  */
 class FuelSurchargeSyncService {
   constructor() {
@@ -30,7 +30,7 @@ class FuelSurchargeSyncService {
       lastUpdated: new Date().toISOString(),
       aramex: {
         carrier: "Aramex Express",
-        url: "https://www.aramex.com/us/en/services-solutions/fuel-surcharge",
+        url: "https://www.aramex.com/ae/en/services-solutions/fuel-surcharge",
         uaeUrl: "https://www.aramex.com/ae/en/services-solutions/fuel-surcharge",
         ratePercent: 14.5,
         source: "Aramex Dubai Hub & USGC Jet Fuel Index",

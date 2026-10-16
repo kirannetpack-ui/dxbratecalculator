@@ -1,0 +1,164 @@
+{
+  "enabled": true,
+  "applyOn": "totalLandedCost",
+  "currency": "NPR",
+  "note": "Freight commercial margin configuration in NPR. Applicable to all delivery companies across global and selective countries.",
+  "globalRule": {
+    "type": "weight_tier",
+    "flatMarginPercent": 15,
+    "weightTiers": [
+      {
+        "minWeight": 0,
+        "maxWeight": 5,
+        "marginPercent": 20,
+        "label": "0.1 - 5.0 kg (Courier / Document & Light Parcels)"
+      },
+      {
+        "minWeight": 5,
+        "maxWeight": 20,
+        "marginPercent": 15,
+        "label": "5.1 - 20.0 kg (Standard Courier Packages)"
+      },
+      {
+        "minWeight": 20,
+        "maxWeight": 50,
+        "marginPercent": 12,
+        "label": "20.1 - 50.0 kg (Medium Commercial Shipments)"
+      },
+      {
+        "minWeight": 50,
+        "maxWeight": 100,
+        "marginPercent": 10,
+        "label": "50.1 - 100.0 kg (Heavy Air Cargo Shipments)"
+      },
+      {
+        "minWeight": 100,
+        "maxWeight": 99999,
+        "marginPercent": 8,
+        "label": "100+ kg (Bulk Wholesale Cargo)"
+      }
+    ]
+  },
+  "countryRules": {
+    "US": {
+      "countryName": "United States",
+      "carrier": "all",
+      "type": "flat",
+      "flatMarginPercent": 25,
+      "weightTiers": [],
+      "lastUpdated": "2026-10-16T06:44:48.351Z"
+    },
+    "GB": {
+      "countryName": "United Kingdom",
+      "carrier": "all",
+      "type": "weight_tier",
+      "flatMarginPercent": 18,
+      "weightTiers": [
+        {
+          "minWeight": 0,
+          "maxWeight": 5,
+          "marginPercent": 22,
+          "label": "0.1 - 5.0 kg"
+        },
+        {
+          "minWeight": 5,
+          "maxWeight": 20,
+          "marginPercent": 18,
+          "label": "5.1 - 20.0 kg"
+        },
+        {
+          "minWeight": 20,
+          "maxWeight": 99999,
+          "marginPercent": 14,
+          "label": "20+ kg"
+        }
+      ]
+    },
+    "IN": {
+      "countryName": "India",
+      "carrier": "all",
+      "type": "flat",
+      "flatMarginPercent": 15,
+      "weightTiers": []
+    },
+    "SA": {
+      "countryName": "Saudi Arabia",
+      "carrier": "all",
+      "type": "weight_tier",
+      "flatMarginPercent": 15,
+      "weightTiers": [
+        {
+          "minWeight": 0,
+          "maxWeight": 5,
+          "marginPercent": 18,
+          "label": "0.1 - 5.0 kg"
+        },
+        {
+          "minWeight": 5,
+          "maxWeight": 20,
+          "marginPercent": 14,
+          "label": "5.1 - 20.0 kg"
+        },
+        {
+          "minWeight": 20,
+          "maxWeight": 99999,
+          "marginPercent": 10,
+          "label": "20+ kg"
+        }
+      ]
+    },
+    "BH": {
+      "countryName": "Bahrain",
+      "carrier": "all",
+      "type": "weight_tier",
+      "flatMarginPercent": 15,
+      "weightTiers": [
+        {
+          "minWeight": 0,
+          "maxWeight": 5,
+          "marginPercent": 18,
+          "label": "0.1 - 5.0 kg"
+        },
+        {
+          "minWeight": 5,
+          "maxWeight": 20,
+          "marginPercent": 14,
+          "label": "5.1 - 20.0 kg"
+        },
+        {
+          "minWeight": 20,
+          "maxWeight": 99999,
+          "marginPercent": 10,
+          "label": "20+ kg"
+        }
+      ]
+    },
+    "AE": {
+      "countryName": "United Arab Emirates",
+      "carrier": "all",
+      "type": "weight_tier",
+      "flatMarginPercent": 15,
+      "weightTiers": [
+        {
+          "minWeight": 0,
+          "maxWeight": 5,
+          "marginPercent": 18,
+          "label": "0.1 - 5.0 kg"
+        },
+        {
+          "minWeight": 5,
+          "maxWeight": 20,
+          "marginPercent": 14,
+          "label": "5.1 - 20.0 kg"
+        },
+        {
+          "minWeight": 20,
+          "maxWeight": 99999,
+          "marginPercent": 10,
+          "label": "20+ kg"
+        }
+      ]
+    }
+  },
+  "lastUpdated": "2026-10-16T06:44:48.351Z"
+}
